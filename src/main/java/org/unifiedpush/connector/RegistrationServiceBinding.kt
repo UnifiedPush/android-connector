@@ -11,7 +11,7 @@ import androidx.core.os.bundleOf
  * This class is used to register to the distributor
  */
 
-// TODO: find
+// TODO: give a list of distributor
 private const val distributor_package = "com.flyingpanda.noprovider2push"
 private const val registration_service_name = "$distributor_package.services.RegisterService"
 
@@ -19,8 +19,8 @@ data class Registration(val senderUid: Int, val endpoint: String)
 
 interface RegistrationServiceHandler {
     fun onConnected(service: RegistrationServiceBinding)
-    fun onRegistered(service: RegistrationServiceBinding, registration: Registration)
-    fun onUnregistered(service: RegistrationServiceBinding)
+    fun onRegisterSuccess(service: RegistrationServiceBinding, registration: Registration)
+    fun onUnregisteredAck(service: RegistrationServiceBinding)
 }
 
 class RegistrationServiceBinding(var context: Context, var bindingHandler: RegistrationServiceHandler){
@@ -41,13 +41,13 @@ class RegistrationServiceBinding(var context: Context, var bindingHandler: Regis
                         service.waitingForInfo = false
                         val endpoint = msg.data?.getString("endpoint").toString()
                         logi("new gateway: $endpoint")
-                        service.bindingHandler.onRegistered(service,
+                        service.bindingHandler.onRegisterSuccess(service,
                                 Registration(msg.sendingUid,endpoint))
                     }
                 }
                 TYPE_CONNECTOR_UNREGISTER_ACKNOWLEDGE -> {
                     logi("App is unregistered")
-                    service.bindingHandler.onUnregistered(service)
+                    service.bindingHandler.onUnregisteredAck(service)
                 }
                 else -> super.handleMessage(msg)
             }
@@ -67,6 +67,7 @@ class RegistrationServiceBinding(var context: Context, var bindingHandler: Regis
             messengerToDistributor = Messenger(service)
             isBound = true
             logi("Register Service connected")
+            bindingHandler.onConnected(this@RegistrationServiceBinding)
         }
 
         override fun onServiceDisconnected(className: ComponentName) {
