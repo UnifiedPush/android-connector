@@ -1,5 +1,6 @@
 package org.unifiedpush.connector
 
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.util.Log
@@ -7,7 +8,7 @@ import java.util.*
 
 fun registerApp(context: Context): String {
     val token = getToken(context).let {
-        if (it.isNullOrEmpty()) newToken(context) else it
+        if (it.isEmpty()) newToken(context) else it
     }
 
     val broadcastIntent = Intent()
@@ -19,8 +20,25 @@ fun registerApp(context: Context): String {
     return token
 }
 
+fun registerAppWithDialog(context: Context){
+    val builder: AlertDialog.Builder = AlertDialog.Builder(context)
+    builder.setTitle("Choose a distributor")
+
+    val distributors = getDistributors(context).toTypedArray()
+    builder.setItems(distributors) { _, which ->
+        val distributor = distributors[which]
+        saveDistributor(context, distributor)
+        Log.d("CheckActivity","distributor: $distributor")
+        registerApp(context)
+    }
+
+    val dialog: AlertDialog = builder.create()
+    dialog.show()
+}
+
+
 fun unregisterApp(context: Context) {
-    val token = getToken(context)!!
+    val token = getToken(context)
     val broadcastIntent = Intent()
     broadcastIntent.`package` = getDistributor(context)
     broadcastIntent.action = UNREGISTER
