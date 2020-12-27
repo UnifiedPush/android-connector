@@ -16,7 +16,6 @@ fun registerApp(context: Context, distributor: String): String {
     broadcastIntent.putExtra("token", token)
     broadcastIntent.putExtra("application", context.packageName)
     context.sendBroadcast(broadcastIntent)
-    Log.i("registerApp", "sent with token=$token")
     return token
 }
 
@@ -46,8 +45,8 @@ fun newToken(context: Context): String {
 fun getDistributors(context: Context): List<String> {
     val intent = Intent()
     intent.action = REGISTER
-    return context.packageManager.queryBroadcastReceivers(intent, 0).map {
-        val packageName = it.serviceInfo.packageName
+    return context.packageManager.queryBroadcastReceivers(intent, 0).mapNotNull {
+        val packageName = it.activityInfo.packageName
         Log.d("UnifiedPush-Registration", "Found distributor with package name $packageName")
         packageName
     }
