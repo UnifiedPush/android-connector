@@ -15,9 +15,10 @@ open class MessagingReceiver(private val handler: MessagingReceiverHandler) : Br
     override fun onReceive(context: Context?, intent: Intent?) {
         when (intent!!.action) {
             NEW_ENDPOINT -> {
-                val token = intent.getStringExtra("token")!!
+                if (getToken(context!!) != intent.getStringExtra("token")){
+                    return
+                }
                 val endpoint = intent.getStringExtra("endpoint")!!
-                // TODO: check token
                 this@MessagingReceiver.handler.onNewEndpoint(context, endpoint)
             }
             UNREGISTERED -> {
@@ -25,17 +26,19 @@ open class MessagingReceiver(private val handler: MessagingReceiverHandler) : Br
                     if(it.isNullOrEmpty())
                         this@MessagingReceiver.handler.onUnregisteredAck(context)
                     else {
-                        val token = it
-                        // TODO: check token
+                        if (getToken(context!!) != it){
+                            return
+                        }
                         this@MessagingReceiver.handler.onUnregistered(context)
                     }
                 }
                 this@MessagingReceiver.handler.onUnregistered(context)
             }
             MESSAGE -> {
-                val token = intent.getStringExtra("token")!!
+                if (getToken(context!!) != intent.getStringExtra("token")){
+                    return
+                }
                 val message = intent.getStringExtra("message")!!
-                // TODO: check token
                 this@MessagingReceiver.handler.onMessage(context, message)
             }
         }
