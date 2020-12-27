@@ -52,7 +52,7 @@ private fun acknowledgeMessage(context: Context, id: String) {
     val token = getToken(context)!!
     val broadcastIntent = Intent()
     broadcastIntent.`package` = getDistributor(context)
-    broadcastIntent.action = UNREGISTER
+    broadcastIntent.action = MESSAGE_ACK
     broadcastIntent.putExtra("token", token)
     broadcastIntent.putExtra("id", id)
     context.sendBroadcast(broadcastIntent)

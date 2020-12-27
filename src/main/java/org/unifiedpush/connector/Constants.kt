@@ -15,3 +15,4 @@ const val MESSAGE = "org.unifiedpush.android.connector.MESSAGE"
 
 const val REGISTER = "org.unifiedpush.android.distributor.REGISTER"
 const val UNREGISTER = "org.unifiedpush.android.distributor.UNREGISTER"
+const val MESSAGE_ACK = "org.unifiedpush.android.distributor.MESSAGE_ACK"
