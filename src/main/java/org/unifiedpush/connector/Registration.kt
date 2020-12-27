@@ -52,7 +52,3 @@ fun getDistributors(context: Context): List<String> {
         package_name
     }
 }
-
-fun checkAvailable(context: Context): Boolean {
-    return getDistributors(context).isNotEmpty()
-}
