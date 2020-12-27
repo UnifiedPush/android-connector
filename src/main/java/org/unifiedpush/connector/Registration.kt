@@ -3,6 +3,7 @@ package org.unifiedpush.connector
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import java.util.*
 
 fun registerApp(context: Context, distributor: String): String{
     val token = getToken(context).let{
@@ -30,11 +31,13 @@ fun unregisterApp(context: Context, distributor: String){
 }
 
 fun getToken(context: Context): String{
-    // TODO random token + save it
-    return "FAKE_TOKEN"
+    return context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)?.getString(
+            PREF_MASTER_TOKEN, ""
+    )?: ""
 }
 
 fun newToken(context: Context): String{
-    // TODO get the saved token
-    return "FAKE_TOKEN"
+    val token = UUID.randomUUID().toString()
+    context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE).edit().putString(PREF_MASTER_TOKEN, token).commit()
+    return token
 }
