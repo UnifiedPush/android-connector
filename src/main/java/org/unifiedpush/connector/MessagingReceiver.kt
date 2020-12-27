@@ -31,16 +31,29 @@ open class MessagingReceiver(private val handler: MessagingReceiverHandler) : Br
                         }
                         this@MessagingReceiver.handler.onUnregistered(context)
                     }
+                    removeToken(context!!)
+                    removeDistributor(context!!)
                 }
-                this@MessagingReceiver.handler.onUnregistered(context)
             }
             MESSAGE -> {
                 if (getToken(context!!) != intent.getStringExtra("token")){
                     return
                 }
                 val message = intent.getStringExtra("message")!!
+                val id = intent.getStringExtra("id")?: ""
                 this@MessagingReceiver.handler.onMessage(context, message)
+                acknowledgeMessage(context, id)
             }
         }
     }
+}
+
+private fun acknowledgeMessage(context: Context, id: String) {
+    val token = getToken(context)!!
+    val broadcastIntent = Intent()
+    broadcastIntent.`package` = getDistributor(context)
+    broadcastIntent.action = UNREGISTER
+    broadcastIntent.putExtra("token", token)
+    broadcastIntent.putExtra("id", id)
+    context.sendBroadcast(broadcastIntent)
 }

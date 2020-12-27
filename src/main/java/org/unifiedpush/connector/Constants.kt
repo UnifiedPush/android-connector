@@ -7,6 +7,7 @@ package org.unifiedpush.connector
 
 const val PREF_MASTER = "UP-lib"
 const val PREF_MASTER_TOKEN = "UP-lib_token"
+const val PREF_MASTER_DISTRIBUTOR = "UP-lib_distributor"
 
 const val NEW_ENDPOINT = "org.unifiedpush.android.connector.NEW_ENDPOINT"
 const val UNREGISTERED = "org.unifiedpush.android.connector.UNREGISTERED"

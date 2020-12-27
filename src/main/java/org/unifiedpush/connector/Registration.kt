@@ -5,13 +5,13 @@ import android.content.Intent
 import android.util.Log
 import java.util.*
 
-fun registerApp(context: Context, distributor: String): String {
+fun registerApp(context: Context): String {
     val token = getToken(context).let {
         if (it.isNullOrEmpty()) newToken(context) else it
     }
 
     val broadcastIntent = Intent()
-    broadcastIntent.`package` = distributor
+    broadcastIntent.`package` = getDistributor(context)
     broadcastIntent.action = REGISTER
     broadcastIntent.putExtra("token", token)
     broadcastIntent.putExtra("application", context.packageName)
@@ -19,10 +19,10 @@ fun registerApp(context: Context, distributor: String): String {
     return token
 }
 
-fun unregisterApp(context: Context, distributor: String) {
+fun unregisterApp(context: Context) {
     val token = getToken(context)!!
     val broadcastIntent = Intent()
-    broadcastIntent.`package` = distributor
+    broadcastIntent.`package` = getDistributor(context)
     broadcastIntent.action = UNREGISTER
     broadcastIntent.putExtra("token", token)
     broadcastIntent.putExtra("application", context.packageName)
@@ -42,6 +42,11 @@ fun newToken(context: Context): String {
     return token
 }
 
+fun removeToken(context: Context){
+    context.getSharedPreferences(PREF_MASTER,Context.MODE_PRIVATE).edit()
+        .remove(PREF_MASTER_TOKEN).commit()
+}
+
 fun getDistributors(context: Context): List<String> {
     val intent = Intent()
     intent.action = REGISTER
@@ -50,4 +55,20 @@ fun getDistributors(context: Context): List<String> {
         Log.d("UnifiedPush-Registration", "Found distributor with package name $packageName")
         packageName
     }
+}
+
+fun saveDistributor(context: Context, distributor: String){
+    context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE).edit()
+        .putString(PREF_MASTER_DISTRIBUTOR, distributor).commit()
+}
+
+fun getDistributor(context: Context): String {
+    return context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)?.getString(
+        PREF_MASTER_DISTRIBUTOR, ""
+    ) ?: ""
+}
+
+fun removeDistributor(context: Context){
+    context.getSharedPreferences(PREF_MASTER,Context.MODE_PRIVATE).edit()
+        .remove(PREF_MASTER_TOKEN).commit()
 }
