@@ -108,7 +108,13 @@ fun getDistributors(context: Context): List<String> {
     return context.packageManager.queryBroadcastReceivers(intent, 0).mapNotNull {
         val packageName = it.activityInfo.packageName
         Log.d("UnifiedPush-Registration", "Found distributor with package name $packageName")
-        packageName
+        packageName.let{ name ->
+            if (name != context.packageName) {
+                name
+            } else {
+                null
+            }
+        }
     } + fcm
 }
 
