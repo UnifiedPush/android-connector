@@ -13,9 +13,9 @@ fun registerApp(context: Context): String {
 
     val broadcastIntent = Intent()
     broadcastIntent.`package` = getDistributor(context)
-    broadcastIntent.action = REGISTER
-    broadcastIntent.putExtra("token", token)
-    broadcastIntent.putExtra("application", context.packageName)
+    broadcastIntent.action = ACTION_REGISTER
+    broadcastIntent.putExtra(EXTRA_TOKEN, token)
+    broadcastIntent.putExtra(EXTRA_APPLICATION, context.packageName)
     context.sendBroadcast(broadcastIntent)
     return token
 }
@@ -41,9 +41,9 @@ fun unregisterApp(context: Context) {
     val token = getToken(context)
     val broadcastIntent = Intent()
     broadcastIntent.`package` = getDistributor(context)
-    broadcastIntent.action = UNREGISTER
-    broadcastIntent.putExtra("token", token)
-    broadcastIntent.putExtra("application", context.packageName)
+    broadcastIntent.action = ACTION_UNREGISTER
+    broadcastIntent.putExtra(EXTRA_TOKEN, token)
+    broadcastIntent.putExtra(EXTRA_APPLICATION, context.packageName)
     context.sendBroadcast(broadcastIntent)
 }
 
@@ -67,7 +67,7 @@ fun removeToken(context: Context){
 
 fun getDistributors(context: Context): List<String> {
     val intent = Intent()
-    intent.action = REGISTER
+    intent.action = ACTION_REGISTER
     return context.packageManager.queryBroadcastReceivers(intent, 0).mapNotNull {
         val packageName = it.activityInfo.packageName
         Log.d("UnifiedPush-Registration", "Found distributor with package name $packageName")

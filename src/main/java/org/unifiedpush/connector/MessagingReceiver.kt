@@ -10,30 +10,24 @@ interface MessagingReceiverHandler {
     fun onMessage(context: Context?, message: String)
 }
 
-open class MessagingReceiver(private val handler: MessagingReceiverHandler) : BroadcastReceiver(){
+open class MessagingReceiver(private val handler: MessagingReceiverHandler) : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
+        if (getToken(context!!) != intent!!.getStringExtra(EXTRA_TOKEN)) {
+            return
+        }
         when (intent!!.action) {
-            NEW_ENDPOINT -> {
-                if (getToken(context!!) != intent.getStringExtra("token")){
-                    return
-                }
-                val endpoint = intent.getStringExtra("endpoint")!!
+            ACTION_NEW_ENDPOINT -> {
+                val endpoint = intent.getStringExtra(EXTRA_ENDPOINT)!!
                 this@MessagingReceiver.handler.onNewEndpoint(context, endpoint)
             }
-            UNREGISTERED -> {
-                if (getToken(context!!) != intent.getStringExtra("token")){
-                    return
-                }
+            ACTION_UNREGISTERED -> {
                 this@MessagingReceiver.handler.onUnregistered(context)
                 removeToken(context!!)
                 removeDistributor(context!!)
             }
-            MESSAGE -> {
-                if (getToken(context!!) != intent.getStringExtra("token")){
-                    return
-                }
-                val message = intent.getStringExtra("message")!!
-                val id = intent.getStringExtra("id")?: ""
+            ACTION_MESSAGE -> {
+                val message = intent.getStringExtra(EXTRA_MESSAGE)!!
+                val id = intent.getStringExtra(EXTRA_MESSAGE_ID) ?: ""
                 this@MessagingReceiver.handler.onMessage(context, message)
                 acknowledgeMessage(context, id)
             }
@@ -45,8 +39,8 @@ private fun acknowledgeMessage(context: Context, id: String) {
     val token = getToken(context)!!
     val broadcastIntent = Intent()
     broadcastIntent.`package` = getDistributor(context)
-    broadcastIntent.action = MESSAGE_ACK
-    broadcastIntent.putExtra("token", token)
-    broadcastIntent.putExtra("id", id)
+    broadcastIntent.action = ACTION_MESSAGE_ACK
+    broadcastIntent.putExtra(EXTRA_TOKEN, token)
+    broadcastIntent.putExtra(EXTRA_MESSAGE_ID, id)
     context.sendBroadcast(broadcastIntent)
 }
