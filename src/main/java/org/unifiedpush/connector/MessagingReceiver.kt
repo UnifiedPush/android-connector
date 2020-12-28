@@ -10,15 +10,24 @@ interface MessagingReceiverHandler {
     fun onMessage(context: Context?, message: String)
 }
 
-open class MessagingReceiver(private val handler: MessagingReceiverHandler) : BroadcastReceiver() {
+open class MessagingReceiver(
+    private val handler: MessagingReceiverHandler,
+    private val fcmEndpoint: String
+) : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         if (getToken(context!!) != intent!!.getStringExtra(EXTRA_TOKEN)) {
             return
         }
         when (intent!!.action) {
             ACTION_NEW_ENDPOINT -> {
-                val endpoint = intent.getStringExtra(EXTRA_ENDPOINT)!!
-                this@MessagingReceiver.handler.onNewEndpoint(context, endpoint)
+                var endpoint = intent.getStringExtra(EXTRA_ENDPOINT)
+                if (endpoint == null) {
+                    val fcmToken = intent.getStringExtra(EXTRA_FCM_TOKEN)
+                    if (fcmToken != null) {
+                        endpoint = "$fcmEndpoint/$fcmToken"
+                    }
+                }
+                this@MessagingReceiver.handler.onNewEndpoint(context, endpoint!!)
             }
             ACTION_UNREGISTERED -> {
                 this@MessagingReceiver.handler.onUnregistered(context)
