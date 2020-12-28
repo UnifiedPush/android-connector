@@ -11,22 +11,22 @@ interface MessagingReceiverHandler {
     fun onMessage(context: Context?, message: String)
 }
 
-open class MessagingReceiver(private val handler: MessagingReceiverHandler) : BroadcastReceiver(){
+open class MessagingReceiver(private val handler: MessagingReceiverHandler) : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         when (intent!!.action) {
-            NEW_ENDPOINT -> {
-                if (getToken(context!!) != intent.getStringExtra("token")){
+            ACTION_NEW_ENDPOINT -> {
+                if (getToken(context!!) != intent.getStringExtra(EXTRA_TOKEN)) {
                     return
                 }
-                val endpoint = intent.getStringExtra("endpoint")!!
+                val endpoint = intent.getStringExtra(EXTRA_ENDPOINT)!!
                 this@MessagingReceiver.handler.onNewEndpoint(context, endpoint)
             }
-            UNREGISTERED -> {
-                intent.getStringExtra("token").let{
-                    if(it.isNullOrEmpty())
+            ACTION_UNREGISTERED -> {
+                intent.getStringExtra(EXTRA_TOKEN).let {
+                    if (it.isNullOrEmpty())
                         this@MessagingReceiver.handler.onUnregisteredAck(context)
                     else {
-                        if (getToken(context!!) != it){
+                        if (getToken(context!!) != it) {
                             return
                         }
                         this@MessagingReceiver.handler.onUnregistered(context)
@@ -35,12 +35,12 @@ open class MessagingReceiver(private val handler: MessagingReceiverHandler) : Br
                     removeDistributor(context!!)
                 }
             }
-            MESSAGE -> {
-                if (getToken(context!!) != intent.getStringExtra("token")){
+            ACTION_MESSAGE -> {
+                if (getToken(context!!) != intent.getStringExtra(EXTRA_TOKEN)) {
                     return
                 }
-                val message = intent.getStringExtra("message")!!
-                val id = intent.getStringExtra("id")?: ""
+                val message = intent.getStringExtra(EXTRA_MESSAGE)!!
+                val id = intent.getStringExtra(EXTRA_MESSAGE_ID) ?: ""
                 this@MessagingReceiver.handler.onMessage(context, message)
                 acknowledgeMessage(context, id)
             }
@@ -52,8 +52,8 @@ private fun acknowledgeMessage(context: Context, id: String) {
     val token = getToken(context)!!
     val broadcastIntent = Intent()
     broadcastIntent.`package` = getDistributor(context)
-    broadcastIntent.action = MESSAGE_ACK
-    broadcastIntent.putExtra("token", token)
-    broadcastIntent.putExtra("id", id)
+    broadcastIntent.action = ACTION_MESSAGE_ACK
+    broadcastIntent.putExtra(EXTRA_TOKEN, token)
+    broadcastIntent.putExtra(EXTRA_MESSAGE_ID, id)
     context.sendBroadcast(broadcastIntent)
 }
