@@ -15,11 +15,10 @@ class FirebaseRedirectionService : FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage) {
         Log.d("FCM", "Firebase onMessageReceived ${message.messageId}")
-        Log.d("FCM",message.rawData.toString())
         val intent = Intent()
         intent.action = ACTION_MESSAGE
         intent.setPackage(baseContext.packageName)
-        intent.putExtra(EXTRA_MESSAGE, message.rawData.toString())
+        intent.putExtra(EXTRA_MESSAGE, message.notification?.body.toString())
         intent.putExtra(EXTRA_MESSAGE_ID, message.messageId)
         intent.putExtra(EXTRA_TOKEN, getToken(baseContext))
         baseContext.sendBroadcast(intent)
