@@ -5,8 +5,6 @@ package org.unifiedpush.connector
  * https://raw.githubusercontent.com/UnifiedPush/UP-spec/main/constants.md
  */
 
-const val LOG_TAG = "UnifiedPushConnector"
-
 const val PREF_MASTER = "UP-lib"
 const val PREF_MASTER_TOKEN = "UP-lib_token"
 const val PREF_MASTER_DISTRIBUTOR = "UP-lib_distributor"
@@ -24,6 +22,5 @@ const val EXTRA_TOKEN = "token"
 const val EXTRA_ENDPOINT = "endpoint"
 const val EXTRA_MESSAGE = "message"
 const val EXTRA_MESSAGE_ID = "id"
-const val EXTRA_FCM_TOKEN = "fcm_token"
 
-const val FCM_DISTRIBUTOR_NAME = "__FCM__"
+const val FCM_DISTRIBUTOR_NAME = "FirebaseCloudMessaging"

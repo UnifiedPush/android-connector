@@ -8,21 +8,17 @@ import org.unifiedpush.connector.*
 
 class FirebaseRedirectionService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
-        Log.d(LOG_TAG, "Firebase onNewToken $token")
-        val intent = Intent()
-        intent.action = ACTION_NEW_ENDPOINT
-        intent.setPackage(baseContext.packageName)
-        intent.putExtra(EXTRA_FCM_TOKEN, token)
-        intent.putExtra(EXTRA_TOKEN, getToken(baseContext))
-        baseContext.sendBroadcast(intent)
+        Log.d("FCM", "Firebase onNewToken $token")
+        saveToken(baseContext,token)
+        registerApp(baseContext)
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
-        Log.d(LOG_TAG, "Firebase onMessageReceived ${message.messageId}")
+        Log.d("FCM", "Firebase onMessageReceived ${message.messageId}")
+        Log.d("FCM",message.rawData.toString())
         val intent = Intent()
         intent.action = ACTION_MESSAGE
         intent.setPackage(baseContext.packageName)
-        // TODO: how best pass the message data?
         intent.putExtra(EXTRA_MESSAGE, message.rawData.toString())
         intent.putExtra(EXTRA_MESSAGE_ID, message.messageId)
         intent.putExtra(EXTRA_TOKEN, getToken(baseContext))
