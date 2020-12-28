@@ -23,7 +23,7 @@ class FirebaseRedirectionService : FirebaseMessagingService() {
         intent.action = ACTION_MESSAGE
         intent.setPackage(baseContext.packageName)
         // TODO: how best pass the message data?
-        intent.putExtra(EXTRA_MESSAGE, message.rawData)
+        intent.putExtra(EXTRA_MESSAGE, message.rawData.toString())
         intent.putExtra(EXTRA_MESSAGE_ID, message.messageId)
         intent.putExtra(EXTRA_TOKEN, getToken(baseContext))
         baseContext.sendBroadcast(intent)

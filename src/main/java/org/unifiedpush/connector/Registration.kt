@@ -6,6 +6,7 @@ import android.content.Intent
 import android.util.Log
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
+import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
 import java.util.*
 
@@ -28,13 +29,14 @@ fun registerApp(context: Context): String {
         return token
     } else {
         Log.d(LOG_TAG, "Sending pseudo onNewEndpoint for firebase register")
-        val fcmToken = FirebaseMessaging.getInstance().token.result ?: return ""
-        val broadcastIntent = Intent()
-        broadcastIntent.`package` = context.packageName
-        broadcastIntent.action = ACTION_NEW_ENDPOINT
-        broadcastIntent.putExtra(EXTRA_FCM_TOKEN, fcmToken)
-        broadcastIntent.putExtra(EXTRA_TOKEN, getToken(context))
-        context.sendBroadcast(broadcastIntent)
+        FirebaseMessaging.getInstance().token.addOnSuccessListener {
+            val broadcastIntent = Intent()
+            broadcastIntent.`package` = context.packageName
+            broadcastIntent.action = ACTION_NEW_ENDPOINT
+            broadcastIntent.putExtra(EXTRA_FCM_TOKEN, it!!)
+            broadcastIntent.putExtra(EXTRA_TOKEN, getToken(context))
+            context.sendBroadcast(broadcastIntent)
+        }
     }
     return ""
 }
