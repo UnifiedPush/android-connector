@@ -7,7 +7,6 @@ import android.content.Intent
 interface MessagingReceiverHandler {
     fun onNewEndpoint(context: Context?, endpoint: String)
     fun onUnregistered(context: Context?)
-    fun onUnregisteredAck(context: Context?)
     fun onMessage(context: Context?, message: String)
 }
 
@@ -22,18 +21,12 @@ open class MessagingReceiver(private val handler: MessagingReceiverHandler) : Br
                 this@MessagingReceiver.handler.onNewEndpoint(context, endpoint)
             }
             UNREGISTERED -> {
-                intent.getStringExtra("token").let{
-                    if(it.isNullOrEmpty())
-                        this@MessagingReceiver.handler.onUnregisteredAck(context)
-                    else {
-                        if (getToken(context!!) != it){
-                            return
-                        }
-                        this@MessagingReceiver.handler.onUnregistered(context)
-                    }
-                    removeToken(context!!)
-                    removeDistributor(context!!)
+                if (getToken(context!!) != intent.getStringExtra("token")){
+                    return
                 }
+                this@MessagingReceiver.handler.onUnregistered(context)
+                removeToken(context!!)
+                removeDistributor(context!!)
             }
             MESSAGE -> {
                 if (getToken(context!!) != intent.getStringExtra("token")){
