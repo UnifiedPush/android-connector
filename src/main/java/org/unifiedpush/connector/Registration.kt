@@ -6,7 +6,6 @@ import android.content.Intent
 import android.util.Log
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
-import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
 import java.util.*
 
@@ -15,7 +14,12 @@ fun registerApp(context: Context): String {
 
     val token = getToken(context).let {
         if (distributor == FCM_DISTRIBUTOR_NAME && it.isEmpty()){
-            FirebaseMessaging.getInstance().token.result!!
+            var fcmToken = ""
+            FirebaseMessaging.getInstance().token.addOnSuccessListener { _token ->
+                fcmToken = _token!!
+            }
+            saveToken(context,fcmToken)
+            fcmToken
         }else {
             if (it.isEmpty()) newToken(context) else it
         }
