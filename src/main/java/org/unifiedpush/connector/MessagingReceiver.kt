@@ -12,7 +12,7 @@ interface MessagingReceiverHandler {
 
 open class MessagingReceiver(private val handler: MessagingReceiverHandler) : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
-        if (getToken(context!!) != intent.getStringExtra(EXTRA_TOKEN)) {
+        if (getToken(context!!) != intent!!.getStringExtra(EXTRA_TOKEN)) {
             return
         }
         when (intent!!.action) {
