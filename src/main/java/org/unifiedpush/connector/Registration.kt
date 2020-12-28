@@ -6,15 +6,19 @@ import android.content.Intent
 import android.util.Log
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
+import com.google.firebase.messaging.FirebaseMessaging
 import java.util.*
 
 fun registerApp(context: Context): String {
+    Log.d(LOG_TAG, "retrieving token to register app")
     val token = getToken(context).let {
         if (it.isEmpty()) newToken(context) else it
     }
 
+
     val distributor = getDistributor(context)
     if (distributor != FCM_DISTRIBUTOR_NAME) {
+        Log.d(LOG_TAG, "performing registration with distributor $distributor")
         val broadcastIntent = Intent()
         broadcastIntent.`package` = distributor
         broadcastIntent.action = ACTION_REGISTER
@@ -22,6 +26,15 @@ fun registerApp(context: Context): String {
         broadcastIntent.putExtra(EXTRA_APPLICATION, context.packageName)
         context.sendBroadcast(broadcastIntent)
         return token
+    } else {
+        Log.d(LOG_TAG, "Sending pseudo onNewEndpoint for firebase register")
+        val fcmToken = FirebaseMessaging.getInstance().token.result ?: return ""
+        val broadcastIntent = Intent()
+        broadcastIntent.`package` = context.packageName
+        broadcastIntent.action = ACTION_NEW_ENDPOINT
+        broadcastIntent.putExtra(EXTRA_FCM_TOKEN, fcmToken)
+        broadcastIntent.putExtra(EXTRA_TOKEN, getToken(context))
+        context.sendBroadcast(broadcastIntent)
     }
     return ""
 }
@@ -53,6 +66,13 @@ fun unregisterApp(context: Context) {
         broadcastIntent.action = ACTION_UNREGISTER
         broadcastIntent.putExtra(EXTRA_TOKEN, token)
         broadcastIntent.putExtra(EXTRA_APPLICATION, context.packageName)
+        context.sendBroadcast(broadcastIntent)
+    } else {
+        Log.d(LOG_TAG, "Sending pseudo onUnregistered for firebase unregister")
+        val broadcastIntent = Intent()
+        broadcastIntent.`package` = context.packageName
+        broadcastIntent.action = ACTION_UNREGISTERED
+        broadcastIntent.putExtra(EXTRA_TOKEN, getToken(context))
         context.sendBroadcast(broadcastIntent)
     }
 }
@@ -89,7 +109,7 @@ fun getDistributors(context: Context): List<String> {
 
     return context.packageManager.queryBroadcastReceivers(intent, 0).mapNotNull {
         val packageName = it.activityInfo.packageName
-        Log.d("UnifiedPush-Registration", "Found distributor with package name $packageName")
+        Log.d(LOG_TAG, "Found distributor with package name $packageName")
         packageName
     } + fcm
 }

@@ -5,6 +5,8 @@ package org.unifiedpush.connector
  * https://raw.githubusercontent.com/UnifiedPush/UP-spec/main/constants.md
  */
 
+const val LOG_TAG = "UnifiedPushConnector"
+
 const val PREF_MASTER = "UP-lib"
 const val PREF_MASTER_TOKEN = "UP-lib_token"
 const val PREF_MASTER_DISTRIBUTOR = "UP-lib_distributor"
