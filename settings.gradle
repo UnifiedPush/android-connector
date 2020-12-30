@@ -1,0 +1,2 @@
+include ':connector'
+rootProject.name = "UnifiedPush Connector"
