@@ -27,3 +27,6 @@ dependencies {
 
 # For FCM to work
 Add `classpath 'com.google.gms:google-services:4.3.4'  // Google Services plugin` to you project level build.gradle
+Furthermore you need to add `id 'com.google.gms.google-services'  // Google Services plugin` to your
+app level build.gradle. Lastly, since this version of the lib uses play services behind the scenes
+you need to add the google-services.json file from firebase to your app directory.

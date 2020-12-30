@@ -1,10 +1,10 @@
-package org.unifiedpush.connector.fcm
+package org.unifiedpush.android.connector.fcm
 
 import android.content.Intent
 import android.util.Log
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import org.unifiedpush.connector.*
+import org.unifiedpush.android.connector.*
 
 class FirebaseRedirectionService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
