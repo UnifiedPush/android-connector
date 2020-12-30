@@ -1,4 +1,4 @@
-package org.unifiedpush.connector
+package org.unifiedpush.android.connector
 
 import android.app.AlertDialog
 import android.content.Context
