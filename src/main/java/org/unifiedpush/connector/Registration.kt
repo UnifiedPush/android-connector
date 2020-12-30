@@ -4,15 +4,33 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
+import com.google.firebase.messaging.FirebaseMessaging
 import java.util.*
 
 fun registerApp(context: Context): String {
+    var distributor = getDistributor(context)
+
     val token = getToken(context).let {
-        if (it.isEmpty()) newToken(context) else it
+        if (distributor == FCM_DISTRIBUTOR_NAME && it.isEmpty()){
+            var fcmToken = ""
+            FirebaseMessaging.getInstance().token.addOnSuccessListener { _token ->
+                fcmToken = _token!!
+            }
+            saveToken(context,fcmToken)
+            fcmToken
+        }else {
+            if (it.isEmpty()) newToken(context) else it
+        }
+    }
+
+    if (distributor == FCM_DISTRIBUTOR_NAME) {
+        distributor = context.packageName
     }
 
     val broadcastIntent = Intent()
-    broadcastIntent.`package` = getDistributor(context)
+    broadcastIntent.`package` = distributor
     broadcastIntent.action = ACTION_REGISTER
     broadcastIntent.putExtra(EXTRA_TOKEN, token)
     broadcastIntent.putExtra(EXTRA_APPLICATION, context.packageName)
@@ -38,9 +56,15 @@ fun registerAppWithDialog(context: Context){
 
 
 fun unregisterApp(context: Context) {
+    var distributor = getDistributor(context)
+
+    if (distributor == FCM_DISTRIBUTOR_NAME) {
+        distributor = context.packageName
+    }
+
     val token = getToken(context)
     val broadcastIntent = Intent()
-    broadcastIntent.`package` = getDistributor(context)
+    broadcastIntent.`package` = distributor
     broadcastIntent.action = ACTION_UNREGISTER
     broadcastIntent.putExtra(EXTRA_TOKEN, token)
     broadcastIntent.putExtra(EXTRA_APPLICATION, context.packageName)
@@ -60,6 +84,11 @@ fun newToken(context: Context): String {
     return token
 }
 
+fun saveToken(context: Context, token: String) {
+    context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE).edit()
+        .putString(PREF_MASTER_TOKEN, token).commit()
+}
+
 fun removeToken(context: Context){
     context.getSharedPreferences(PREF_MASTER,Context.MODE_PRIVATE).edit()
         .remove(PREF_MASTER_TOKEN).commit()
@@ -68,11 +97,25 @@ fun removeToken(context: Context){
 fun getDistributors(context: Context): List<String> {
     val intent = Intent()
     intent.action = ACTION_REGISTER
+
+    val fcm = if (GoogleApiAvailability.getInstance()
+            .isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS) {
+        listOf(FCM_DISTRIBUTOR_NAME)
+    } else {
+        listOf()
+    }
+
     return context.packageManager.queryBroadcastReceivers(intent, 0).mapNotNull {
         val packageName = it.activityInfo.packageName
         Log.d("UnifiedPush-Registration", "Found distributor with package name $packageName")
-        packageName
-    }
+        packageName.let{ name ->
+            if (name != context.packageName) {
+                name
+            } else {
+                null
+            }
+        }
+    } + fcm
 }
 
 fun saveDistributor(context: Context, distributor: String){

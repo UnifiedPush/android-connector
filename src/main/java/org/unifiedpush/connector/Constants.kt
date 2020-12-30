@@ -22,3 +22,5 @@ const val EXTRA_TOKEN = "token"
 const val EXTRA_ENDPOINT = "endpoint"
 const val EXTRA_MESSAGE = "message"
 const val EXTRA_MESSAGE_ID = "id"
+
+const val FCM_DISTRIBUTOR_NAME = "FirebaseCloudMessaging"

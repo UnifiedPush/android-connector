@@ -8,6 +8,7 @@ interface MessagingReceiverHandler {
     fun onNewEndpoint(context: Context?, endpoint: String)
     fun onUnregistered(context: Context?)
     fun onMessage(context: Context?, message: String)
+    fun getEndpoint(token: String): String
 }
 
 open class MessagingReceiver(private val handler: MessagingReceiverHandler) : BroadcastReceiver() {
@@ -30,6 +31,27 @@ open class MessagingReceiver(private val handler: MessagingReceiverHandler) : Br
                 val id = intent.getStringExtra(EXTRA_MESSAGE_ID) ?: ""
                 this@MessagingReceiver.handler.onMessage(context, message)
                 acknowledgeMessage(context, id)
+            }
+            /**
+             * FAKE DISTRIBTUOR FOR FCM here
+             */
+            ACTION_REGISTER -> {
+                val token = getToken(context)
+                val broadcastIntent = Intent()
+                broadcastIntent.`package` = context!!.packageName
+                broadcastIntent.action = ACTION_NEW_ENDPOINT
+                broadcastIntent.putExtra(EXTRA_ENDPOINT,
+                    this@MessagingReceiver.handler.getEndpoint(token))
+                broadcastIntent.putExtra(EXTRA_TOKEN, token)
+                context.sendBroadcast(broadcastIntent)
+            }
+             ACTION_UNREGISTER -> {
+                 val token = getToken(context)
+                 val broadcastIntent = Intent()
+                 broadcastIntent.`package` = context!!.packageName
+                 broadcastIntent.action = ACTION_UNREGISTERED
+                 broadcastIntent.putExtra(EXTRA_TOKEN, token)
+                 context.sendBroadcast(broadcastIntent)
             }
         }
     }
