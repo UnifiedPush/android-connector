@@ -8,13 +8,13 @@ import org.unifiedpush.android.connector.*
 
 class FirebaseRedirectionService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
-        Log.d("FCM", "Firebase onNewToken $token")
+        Log.d("UP-FCM", "Firebase onNewToken $token")
         saveToken(baseContext,token)
         registerApp(baseContext)
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
-        Log.d("FCM", "Firebase onMessageReceived ${message.messageId}")
+        Log.d("UP-FCM", "Firebase onMessageReceived ${message.messageId}")
         val intent = Intent()
         intent.action = ACTION_MESSAGE
         intent.setPackage(baseContext.packageName)

@@ -29,6 +29,7 @@ fun registerApp(context: Context): String {
         distributor = context.packageName
     }
 
+    Log.d("UP-Registration", "Sending registration to $distributor")
     val broadcastIntent = Intent()
     broadcastIntent.`package` = distributor
     broadcastIntent.action = ACTION_REGISTER
@@ -46,7 +47,7 @@ fun registerAppWithDialog(context: Context){
     builder.setItems(distributors) { _, which ->
         val distributor = distributors[which]
         saveDistributor(context, distributor)
-        Log.d("CheckActivity","distributor: $distributor")
+        Log.d("UP-Registration","distributor: $distributor")
         registerApp(context)
     }
 

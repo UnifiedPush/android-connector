@@ -3,6 +3,7 @@ package org.unifiedpush.android.connector
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 
 interface MessagingReceiverHandler {
     fun onNewEndpoint(context: Context?, endpoint: String)
@@ -36,6 +37,7 @@ open class MessagingReceiver(private val handler: MessagingReceiverHandler) : Br
              * FAKE DISTRIBTUOR FOR FCM here
              */
             ACTION_REGISTER -> {
+                Log.d("UP-MessagingReceiver", "Fake Distributor register")
                 val token = getToken(context)
                 val broadcastIntent = Intent()
                 broadcastIntent.`package` = context!!.packageName
@@ -46,6 +48,7 @@ open class MessagingReceiver(private val handler: MessagingReceiverHandler) : Br
                 context.sendBroadcast(broadcastIntent)
             }
              ACTION_UNREGISTER -> {
+                 Log.d("UP-MessagingReceiver", "Fake Distributor unregister")
                  val token = getToken(context)
                  val broadcastIntent = Intent()
                  broadcastIntent.`package` = context!!.packageName
