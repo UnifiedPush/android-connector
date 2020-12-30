@@ -1,4 +1,4 @@
-package org.unifiedpush.connector
+package org.unifiedpush.android.connector
 
 /**
  * Constants as defined on the specs
