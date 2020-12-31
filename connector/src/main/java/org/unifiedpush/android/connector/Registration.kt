@@ -6,27 +6,33 @@ import android.content.Intent
 import android.util.Log
 import java.util.*
 
-fun registerApp(context: Context): String {
+fun registerApp(context: Context){
     val token = getToken(context).let {
         if (it.isEmpty()) newToken(context) else it
     }
+    registerAppDistributor(context, getDistributor(context),token)
+}
 
+fun registerAppDistributor(context: Context, distributor: String, token: String) {
     val broadcastIntent = Intent()
-    broadcastIntent.`package` = getDistributor(context)
+    broadcastIntent.`package` = distributor
     broadcastIntent.action = ACTION_REGISTER
     broadcastIntent.putExtra(EXTRA_TOKEN, token)
     broadcastIntent.putExtra(EXTRA_APPLICATION, context.packageName)
     context.sendBroadcast(broadcastIntent)
-    return token
 }
 
 fun registerAppWithDialog(context: Context){
+    registerAppWithDialogFromList(context, getDistributors(context))
+}
+
+fun registerAppWithDialogFromList(context: Context, distributors: List<String>){
     val builder: AlertDialog.Builder = AlertDialog.Builder(context)
     builder.setTitle("Choose a distributor")
 
-    val distributors = getDistributors(context).toTypedArray()
-    builder.setItems(distributors) { _, which ->
-        val distributor = distributors[which]
+    val distributorsArray = distributors.toTypedArray()
+    builder.setItems(distributorsArray) { _, which ->
+        val distributor = distributorsArray[which]
         saveDistributor(context, distributor)
         Log.d("CheckActivity","distributor: $distributor")
         registerApp(context)
@@ -36,11 +42,14 @@ fun registerAppWithDialog(context: Context){
     dialog.show()
 }
 
+fun unregisterApp(context: Context){
+    unregisterAppDistributor(context, getDistributor(context))
+}
 
-fun unregisterApp(context: Context) {
+fun unregisterAppDistributor(context: Context, distributor: String) {
     val token = getToken(context)
     val broadcastIntent = Intent()
-    broadcastIntent.`package` = getDistributor(context)
+    broadcastIntent.`package` = distributor
     broadcastIntent.action = ACTION_UNREGISTER
     broadcastIntent.putExtra(EXTRA_TOKEN, token)
     broadcastIntent.putExtra(EXTRA_APPLICATION, context.packageName)
@@ -58,6 +67,11 @@ fun newToken(context: Context): String {
     context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE).edit()
         .putString(PREF_MASTER_TOKEN, token).commit()
     return token
+}
+
+fun saveToken(context: Context, token: String) {
+    context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE).edit()
+        .putString(PREF_MASTER_TOKEN, token).commit()
 }
 
 fun removeToken(context: Context){
