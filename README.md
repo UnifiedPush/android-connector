@@ -10,7 +10,7 @@ We are currently using jitpack to distributre the library. Add the following two
 build files to include the library in your project.
 
 Add the jitpack repo to the **project level** build.gradle:
-```
+```gradle
 allprojects {
     repositories {
         // ...
@@ -20,7 +20,7 @@ allprojects {
 ```
 
 Add the dependency to the **app** build.gradle. Replace {VERSION} with the release you wish to use
-```
+```gradle
 dependencies {
     // ...
     implementation 'com.github.UnifiedPush:UP-lib:{VERSION}'
@@ -32,13 +32,13 @@ dependencies {
 To register for receiving push services you have two options:
 
 1. Have the library handle distributor selection
-```
+```kotlin
 // Call the library function
 registerAppWithDialog(context)
 ```
 
 2. Handle selection yourself
-```
+```kotlin
 // Get a list of distributors that are available
 val distributors = getDistributors(context)
 // select one or show a dialog or whatever ^^
@@ -48,7 +48,7 @@ registerApp(context)
 ```
 
 **unregister**
-```
+```kotlin
 // inform the library that you would like to unregister from receiving push messages
 unregisterApp(context)
 ```
@@ -56,7 +56,7 @@ unregisterApp(context)
 ## Receiving Push Messages
 
 To receive Push Messages you should extend the class _MessagingReceiver_ and implement the three methods
-```
+```kotlin
 val handler = object: MessagingReceiverHandler{
     override fun onMessage(context: Context?, message: String) {
         // Called when a new message is received. The String contains the full POST body of the push message
@@ -77,6 +77,6 @@ class CustomReceiver: MessagingReceiver(handler)
 ## Sending Push Messages
 
 To send a message to an application you need the "endpoint". You get it in the onNewEndpoint method once it is available. You can then use it to send a message using for example curl
-```
+```bash
 curl -X POST "$endpoint" --data "Any message body that is desired."
 ```
