@@ -78,5 +78,5 @@ class CustomReceiver: MessagingReceiver(handler)
 
 To send a message to an application you need the "endpoint". You get it in the onNewEndpoint method once it is available. You can then use it to send a message using for example curl
 ```
-curl -X POST "$edpoint" --data "Any message body that is desired."
+curl -X POST "$endpoint" --data "Any message body that is desired."
 ```
