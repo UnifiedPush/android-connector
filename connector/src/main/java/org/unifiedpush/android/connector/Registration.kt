@@ -23,10 +23,10 @@ fun registerAppDistributor(context: Context, distributor: String, token: String)
 }
 
 fun registerAppWithDialog(context: Context){
-    registerAppWithDialogFromList(context, getDistributors(context))
+    registerAppWithDialogFromList(context, getDistributors(context)) { registerApp(context) }
 }
 
-fun registerAppWithDialogFromList(context: Context, distributors: List<String>){
+fun registerAppWithDialogFromList(context: Context, distributors: List<String>, registerFunc: (context: Context)-> Unit){
     val builder: AlertDialog.Builder = AlertDialog.Builder(context)
     builder.setTitle("Choose a distributor")
 
@@ -35,7 +35,7 @@ fun registerAppWithDialogFromList(context: Context, distributors: List<String>){
         val distributor = distributorsArray[which]
         saveDistributor(context, distributor)
         Log.d("CheckActivity","distributor: $distributor")
-        registerApp(context)
+        registerFunc(context)
     }
 
     val dialog: AlertDialog = builder.create()

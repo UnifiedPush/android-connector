@@ -25,7 +25,6 @@ fun registerApp(context: Context) {
             }
         return
     }
-
     if (distributor == FCM_DISTRIBUTOR_NAME) {
         distributor = context.packageName
     }
@@ -36,7 +35,7 @@ fun registerApp(context: Context) {
 fun registerAppWithDialog(context: Context){
     registerAppWithDialogFromList(context,
         getDistributors(context)
-    )
+    ) { registerApp(context) }
 }
 
 fun unregisterApp(context: Context) {
@@ -67,14 +66,15 @@ fun removeToken(context: Context) {
 }
 
 fun getDistributors(context: Context): List<String> {
-    var distributors = org.unifiedpush.android.connector.getDistributors(context)
-    distributors.drop(distributors.indexOf(context.packageName))
+    val distributors = org.unifiedpush.android.connector.getDistributors(context).toMutableList()
+    distributors.remove(context.packageName)
+
     val intent = Intent()
     intent.action = ACTION_REGISTER
 
     if (GoogleApiAvailability.getInstance()
             .isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS) {
-        distributors += FCM_DISTRIBUTOR_NAME
+        distributors.add(FCM_DISTRIBUTOR_NAME)
     }
     return distributors
 }
