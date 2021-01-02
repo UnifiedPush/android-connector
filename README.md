@@ -103,7 +103,7 @@ curl -X POST "$endpoint" --data "Any message body that is desired."
 
 For instance, [here](https://github.com/UnifiedPush/UP-example/commit/2aad6fd18e7d03437fe586e08a869d22b1e0069d) is the commit doing the migration from the main version to the fcm-added version on the example application.
 
-You will need a [rewrite proxy](https://github.com/UnifiedPush/UP-spec/blob/main/definitions.md#rewrite-proxy) for FCM to work. The one used by the example application is as follow:
+You, as developper, will need a [rewrite proxy](https://github.com/UnifiedPush/UP-spec/blob/main/definitions.md#rewrite-proxy) for FCM to work (here the rewrite proxy is close to the usual needed gateway to FCM or [truster server](https://firebase.google.com/docs/cloud-messaging/server)). The one used by the example application is as follow, and should work with most applications:
 
 ```
 location /FCM {
