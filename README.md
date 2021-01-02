@@ -4,6 +4,15 @@
 This is a library that can be used by an end user application to receive notifications from any unified push provider.
 An [example application](https://github.com/UnifiedPush/UP-example) is available to show basic usage of the library.
 
+## Index
+
+* [Install Library](#install-library)
+* [Register For Push](#register-for-push)
+* [Receiving Push Messages](#receiving-push-messages)
+* [Sending Push Messages](#sending-push-messages) (from the application server)
+* [Using the FCM-added version](#using-the-fcm-added-version)
+
+
 ## Install Library
 
 We are currently using jitpack to distributre the library. Add the following two code snippeds to you corresponding
@@ -75,8 +84,21 @@ class CustomReceiver: MessagingReceiver(handler)
 ```
 
 ## Sending Push Messages
+(From the application server)
 
-To send a message to an application you need the "endpoint". You get it in the onNewEndpoint method once it is available. You can then use it to send a message using for example curl
+To send a message to an application you need the "endpoint". You get it in the onNewEndpoint method once it is available. You can then use it to send a message using for example curl. The POST body is the message received by the function onMessage.
 ```bash
 curl -X POST "$endpoint" --data "Any message body that is desired."
 ```
+
+## Using the FCM-added version
+
+* Migrate the imported functions from `org.unifiedpush.android.connector` to `org.unifiedpush.android.connector_fcm_added`.
+* Add `classpath 'com.google.gms:google-services:4.3.4'` to you project level build.gradle.
+* Add `id 'com.google.gms.google-services'` to your app level build.gradle.
+* Add the google-services.json file from firebase to your app directory.
+* Add the actions `org.unifiedpush.android.distributor.REGISTER` and `org.unifiedpush.android.distributor.UNREGISTER` to your receiver on the manifest.
+* Change the receiver handler from `MessagingReceiverHandler` to `MessagingReceiverHandlerFCM` and add the getEndpoint function.
+* Change the receiver class from `MessagingReceiver` to `MessagingReceiverFCM`.
+
+For instance, [here](https://github.com/UnifiedPush/UP-example/commit/2aad6fd18e7d03437fe586e08a869d22b1e0069d) is the commit doing the migration from the main version to the fcm-added version on the example application.
