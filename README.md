@@ -102,3 +102,31 @@ curl -X POST "$endpoint" --data "Any message body that is desired."
 * Change the receiver class from `MessagingReceiver` to `MessagingReceiverFCM`.
 
 For instance, [here](https://github.com/UnifiedPush/UP-example/commit/2aad6fd18e7d03437fe586e08a869d22b1e0069d) is the commit doing the migration from the main version to the fcm-added version on the example application.
+
+You will need a [rewrite proxy](https://github.com/UnifiedPush/UP-spec/blob/main/definitions.md#rewrite-proxy) for FCM to work. The one used by the example application is as follow:
+
+```
+location /FCM {
+    access_by_lua_block{
+        ngx.req.read_body()
+        local args = ngx.req.get_uri_args()
+        local token = args["token"]
+        local req = ngx.req.get_body_data()
+        local newreq, n, err = ngx.re.gsub(req, '\\\\', '\\\\')
+        local newreq, n, err = ngx.re.gsub(newreq, '"', '\\"')
+        local newreq, n, err = ngx.re.gsub(newreq, "^", "{\"to\":\"" .. token .. "\",\"notification\":{\"body\":\"")
+        local newreq, n, err = ngx.re.gsub(newreq, "$", "\"}}")
+        ngx.req.set_body_data(newreq)
+    }
+
+    proxy_set_header		Authorization key=<SERVER_KEY>;
+    proxy_set_header		Content-Type application/json;
+    proxy_pass			https://fcm.googleapis.com/fcm/send;
+    proxy_set_header            Host fcm.googleapis.com;
+
+    # Force https
+    if ($scheme = http) {
+        rewrite ^ https://$server_name$request_uri? permanent;
+     }
+}
+```
