@@ -1,2 +1,3 @@
 include ':connector'
+include ':connector_fcm_added'
 rootProject.name = "UnifiedPush Connector"
