@@ -11,6 +11,7 @@ interface MessagingReceiverHandlerFCM : MessagingReceiverHandler {
 
 open class MessagingReceiverFCM(private val handler: MessagingReceiverHandlerFCM) :
     MessagingReceiver(handler) {
+    private val up = RegistrationFCM()
     override fun onReceive(context: Context?, intent: Intent?) {
         super.onReceive(context,intent)
         when (intent!!.action) {
@@ -19,7 +20,7 @@ open class MessagingReceiverFCM(private val handler: MessagingReceiverHandlerFCM
              */
             ACTION_REGISTER -> {
                 Log.d("UP-MessagingReceiver", "Fake Distributor register")
-                val token = getToken(context!!)
+                val token = up.getToken(context!!)
                 val broadcastIntent = Intent()
                 broadcastIntent.`package` = context.packageName
                 broadcastIntent.action = ACTION_NEW_ENDPOINT
@@ -30,7 +31,7 @@ open class MessagingReceiverFCM(private val handler: MessagingReceiverHandlerFCM
             }
              ACTION_UNREGISTER -> {
                  Log.d("UP-MessagingReceiver", "Fake Distributor unregister")
-                 val token = getToken(context!!)
+                 val token = up.getToken(context!!)
                  val broadcastIntent = Intent()
                  broadcastIntent.`package` = context.packageName
                  broadcastIntent.action = ACTION_UNREGISTERED

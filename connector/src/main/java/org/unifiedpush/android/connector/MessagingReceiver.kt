@@ -14,8 +14,9 @@ interface MessagingReceiverHandler {
 }
 
 open class MessagingReceiver(private val handler: MessagingReceiverHandler) : BroadcastReceiver() {
+    private val up = Registration()
     override fun onReceive(context: Context?, intent: Intent?) {
-        if (getToken(context!!) != intent!!.getStringExtra(EXTRA_TOKEN)) {
+        if (up.getToken(context!!) != intent!!.getStringExtra(EXTRA_TOKEN)) {
             return
         }
         when (intent!!.action) {
@@ -24,21 +25,21 @@ open class MessagingReceiver(private val handler: MessagingReceiverHandler) : Br
                 this@MessagingReceiver.handler.onNewEndpoint(context, endpoint)
             }
             ACTION_REGISTRATION_FAILED -> {
-                val message = intent.getStringExtra(EXTRA_MESSAGE)?: "No reason supplied"
-                Log.i("UP-registration","Failed: $message")
+                val message = intent.getStringExtra(EXTRA_MESSAGE) ?: "No reason supplied"
+                Log.i("UP-registration", "Failed: $message")
                 this@MessagingReceiver.handler.onRegistrationFailed(context)
-                removeToken(context!!)
+                up.removeToken(context!!)
             }
             ACTION_REGISTRATION_REFUSED -> {
-                val message = intent.getStringExtra(EXTRA_MESSAGE)?: "No reason supplied"
-                Log.i("UP-registration","Refused: $message")
+                val message = intent.getStringExtra(EXTRA_MESSAGE) ?: "No reason supplied"
+                Log.i("UP-registration", "Refused: $message")
                 this@MessagingReceiver.handler.onRegistrationRefused(context)
-                removeToken(context!!)
+                up.removeToken(context!!)
             }
             ACTION_UNREGISTERED -> {
                 this@MessagingReceiver.handler.onUnregistered(context)
-                removeToken(context!!)
-                removeDistributor(context!!)
+                up.removeToken(context!!)
+                up.removeDistributor(context!!)
             }
             ACTION_MESSAGE -> {
                 val message = intent.getStringExtra(EXTRA_MESSAGE)!!
@@ -48,14 +49,14 @@ open class MessagingReceiver(private val handler: MessagingReceiverHandler) : Br
             }
         }
     }
-}
 
-private fun acknowledgeMessage(context: Context, id: String) {
-    val token = getToken(context)!!
-    val broadcastIntent = Intent()
-    broadcastIntent.`package` = getDistributor(context)
-    broadcastIntent.action = ACTION_MESSAGE_ACK
-    broadcastIntent.putExtra(EXTRA_TOKEN, token)
-    broadcastIntent.putExtra(EXTRA_MESSAGE_ID, id)
-    context.sendBroadcast(broadcastIntent)
+    private fun acknowledgeMessage(context: Context, id: String) {
+        val token = up.getToken(context)!!
+        val broadcastIntent = Intent()
+        broadcastIntent.`package` = up.getDistributor(context)
+        broadcastIntent.action = ACTION_MESSAGE_ACK
+        broadcastIntent.putExtra(EXTRA_TOKEN, token)
+        broadcastIntent.putExtra(EXTRA_MESSAGE_ID, id)
+        context.sendBroadcast(broadcastIntent)
+    }
 }

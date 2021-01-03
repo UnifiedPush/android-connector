@@ -67,7 +67,7 @@ open class Registration {
         ) ?: ""
     }
 
-    fun newToken(context: Context): String {
+    open fun newToken(context: Context): String {
         val token = UUID.randomUUID().toString()
         context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE).edit()
             .putString(PREF_MASTER_TOKEN, token).commit()

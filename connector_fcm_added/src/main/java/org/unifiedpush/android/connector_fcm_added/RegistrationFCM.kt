@@ -64,4 +64,10 @@ class RegistrationFCM : Registration() {
         }
         return distributors
     }
+
+    override fun newToken(context: Context): String {
+        if (getDistributor(context) == FCM_DISTRIBUTOR_NAME)
+            return ""
+        return super.newToken(context)
+    }
 }
