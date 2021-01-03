@@ -6,9 +6,6 @@ import android.util.Log
 import org.unifiedpush.android.connector.*
 
 interface MessagingReceiverHandlerFCM : MessagingReceiverHandler {
-    override fun onNewEndpoint(context: Context?, endpoint: String)
-    override fun onUnregistered(context: Context?)
-    override fun onMessage(context: Context?, message: String)
     fun getEndpoint(token: String): String
 }
 

@@ -3,9 +3,12 @@ package org.unifiedpush.android.connector
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 
 interface MessagingReceiverHandler {
     fun onNewEndpoint(context: Context?, endpoint: String)
+    fun onRegistrationFailed(context: Context?)
+    fun onRegistrationRefused(context: Context?)
     fun onUnregistered(context: Context?)
     fun onMessage(context: Context?, message: String)
 }
@@ -19,6 +22,18 @@ open class MessagingReceiver(private val handler: MessagingReceiverHandler) : Br
             ACTION_NEW_ENDPOINT -> {
                 val endpoint = intent.getStringExtra(EXTRA_ENDPOINT)!!
                 this@MessagingReceiver.handler.onNewEndpoint(context, endpoint)
+            }
+            ACTION_REGISTRATION_FAILED -> {
+                val message = intent.getStringExtra(EXTRA_MESSAGE)?: "No reason supplied"
+                Log.i("UP-registration","Failed: $message")
+                this@MessagingReceiver.handler.onRegistrationFailed(context)
+                removeToken(context!!)
+            }
+            ACTION_REGISTRATION_REFUSED -> {
+                val message = intent.getStringExtra(EXTRA_MESSAGE)?: "No reason supplied"
+                Log.i("UP-registration","Refused: $message")
+                this@MessagingReceiver.handler.onRegistrationRefused(context)
+                removeToken(context!!)
             }
             ACTION_UNREGISTERED -> {
                 this@MessagingReceiver.handler.onUnregistered(context)

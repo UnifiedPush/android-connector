@@ -2,7 +2,7 @@ package org.unifiedpush.android.connector
 
 /**
  * Constants as defined on the specs
- * https://raw.githubusercontent.com/UnifiedPush/UP-spec/main/constants.md
+ * https://github.com/UnifiedPush/UP-spec/blob/main/specifications.md
  */
 
 const val PREF_MASTER = "UP-lib"
@@ -10,6 +10,8 @@ const val PREF_MASTER_TOKEN = "UP-lib_token"
 const val PREF_MASTER_DISTRIBUTOR = "UP-lib_distributor"
 
 const val ACTION_NEW_ENDPOINT = "org.unifiedpush.android.connector.NEW_ENDPOINT"
+const val ACTION_REGISTRATION_FAILED = "org.unifiedpush.android.connector.REGISTRATION_FAILED"
+const val ACTION_REGISTRATION_REFUSED = "org.unifiedpush.android.connector.REGISTRATION_REFUSED"
 const val ACTION_UNREGISTERED = "org.unifiedpush.android.connector.UNREGISTERED"
 const val ACTION_MESSAGE = "org.unifiedpush.android.connector.MESSAGE"
 
