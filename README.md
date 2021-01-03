@@ -95,13 +95,13 @@ curl -X POST "$endpoint" --data "Any message body that is desired."
 
 * Migrate the imported functions from `org.unifiedpush.android.connector` to `org.unifiedpush.android.connector_fcm_added`.
 * Add `classpath 'com.google.gms:google-services:4.3.4'` to you project level build.gradle.
-* Add `id 'com.google.gms.google-services'` to your app level build.gradle.
+* Add `id 'com.google.gms.google-services'` and `implementation 'com.github.UnifiedPush:UP-lib_fcm-added:{VERSION}'` to your app level build.gradle.
 * Add the google-services.json file from firebase to your app directory.
 * Add the actions `org.unifiedpush.android.distributor.REGISTER` and `org.unifiedpush.android.distributor.UNREGISTER` to your receiver on the manifest.
 * Change the receiver handler from `MessagingReceiverHandler` to `MessagingReceiverHandlerFCM` and add the getEndpoint function.
 * Change the receiver class from `MessagingReceiver` to `MessagingReceiverFCM`.
 
-For instance, [here](https://github.com/UnifiedPush/UP-example/commit/2aad6fd18e7d03437fe586e08a869d22b1e0069d) is the commit doing the migration from the main version to the fcm-added version on the example application.
+For instance, [here](https://github.com/UnifiedPush/UP-example/commit/6e5e20e69a21f28d48a4d6535ec60fb60ad03108) is the commit doing the migration from the main version to the fcm-added version on the example application.
 
 You, as developper, will need a [rewrite proxy](https://github.com/UnifiedPush/UP-spec/blob/main/definitions.md#rewrite-proxy) for FCM to work (here the rewrite proxy is close to the usual needed gateway to FCM or [truster server](https://firebase.google.com/docs/cloud-messaging/server)). The one used by the example application is as follow, and should work with most applications:
 
