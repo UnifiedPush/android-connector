@@ -32,7 +32,7 @@ Add the dependency to the **app** build.gradle. Replace {VERSION} with the relea
 ```gradle
 dependencies {
     // ...
-    implementation 'com.github.UnifiedPush:UP-lib:{VERSION}'
+    implementation 'com.github.UnifiedPush:android-connector:{VERSION}'
 }
 ```
 
