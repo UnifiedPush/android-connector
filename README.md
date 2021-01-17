@@ -1,8 +1,8 @@
 # UP-lib
-![Release](https://jitpack.io/v/UnifiedPush/UP-lib.svg)
+![Release](https://jitpack.io/v/UnifiedPush/android-connector.svg)
 
 This is a library that can be used by an end user application to receive notifications from any unified push provider.
-An [example application](https://github.com/UnifiedPush/UP-example) is available to show basic usage of the library.
+An [example application](https://github.com/UnifiedPush/android-example) is available to show basic usage of the library.
 
 ## Index
 
@@ -101,9 +101,9 @@ curl -X POST "$endpoint" --data "Any message body that is desired."
 * Change the receiver handler from `MessagingReceiverHandler` to `MessagingReceiverHandlerFCM` and add the getEndpoint function.
 * Change the receiver class from `MessagingReceiver` to `MessagingReceiverFCM`.
 
-For instance, [here](https://github.com/UnifiedPush/UP-example/commit/6e5e20e69a21f28d48a4d6535ec60fb60ad03108) is the commit doing the migration from the main version to the fcm-added version on the example application.
+For instance, [here](https://github.com/UnifiedPush/android-example/commit/6e5e20e69a21f28d48a4d6535ec60fb60ad03108) is the commit doing the migration from the main version to the fcm-added version on the example application.
 
-You, as developper, will need a [rewrite proxy](https://github.com/UnifiedPush/UP-spec/blob/main/definitions.md#rewrite-proxy) for FCM to work (here the rewrite proxy is close to the usual needed gateway to FCM or [truster server](https://firebase.google.com/docs/cloud-messaging/server)). The one used by the example application is as follow, and should work with most applications:
+You, as developper, will need a [rewrite proxy](https://github.com/UnifiedPush/specifications/blob/main/definitions.md#rewrite-proxy) for FCM to work (here the rewrite proxy is close to the usual needed gateway to FCM or [trusted server](https://firebase.google.com/docs/cloud-messaging/server)). The one used by the example application is as follow, and should work with most applications:
 
 ```
 location /FCM {
