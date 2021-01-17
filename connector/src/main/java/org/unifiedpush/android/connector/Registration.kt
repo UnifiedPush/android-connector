@@ -3,7 +3,11 @@ package org.unifiedpush.android.connector
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.text.SpannableString
+import android.text.method.LinkMovementMethod
+import android.text.util.Linkify
 import android.util.Log
+import android.widget.TextView
 import java.util.*
 
 open class Registration {
@@ -32,19 +36,39 @@ open class Registration {
         distributors: List<String>,
         registerFunc: (context: Context) -> Unit
     ) {
-        val builder: AlertDialog.Builder = AlertDialog.Builder(context)
-        builder.setTitle("Choose a distributor")
+        when(distributors.size){
+            0 -> {
+                val message = TextView(context)
+                val builder = AlertDialog.Builder(context)
+                val s = SpannableString("You need to install a distributor for push notifications to work.\n" +
+                        "See available providers here: https://github.com/UnifiedPush/contrib/blob/main/distributors.md")
+                Linkify.addLinks(s, Linkify.WEB_URLS);
+                message.text = s
+                message.movementMethod = LinkMovementMethod.getInstance()
+                message.setPadding(16,16,16,16)
+                builder.setTitle("No distributor found")
+                builder.setView(message)
+                builder.show()
+            }
+            1 -> {
+                saveDistributor(context, distributors.first())
+                registerFunc(context)
+            }
+            else ->{
+                val builder: AlertDialog.Builder = AlertDialog.Builder(context)
+                builder.setTitle("Choose a distributor")
 
-        val distributorsArray = distributors.toTypedArray()
-        builder.setItems(distributorsArray) { _, which ->
-            val distributor = distributorsArray[which]
-            saveDistributor(context, distributor)
-            Log.d("CheckActivity", "distributor: $distributor")
-            registerFunc(context)
+                val distributorsArray = distributors.toTypedArray()
+                builder.setItems(distributorsArray) { _, which ->
+                    val distributor = distributorsArray[which]
+                    saveDistributor(context, distributor)
+                    Log.d("CheckActivity", "distributor: $distributor")
+                    registerFunc(context)
+                }
+                val dialog: AlertDialog = builder.create()
+                dialog.show()
+            }
         }
-
-        val dialog: AlertDialog = builder.create()
-        dialog.show()
     }
 
     open fun unregisterApp(context: Context) {
