@@ -42,7 +42,7 @@ open class Registration {
                 val builder = AlertDialog.Builder(context)
                 val s = SpannableString("You need to install a distributor for push notifications to work.\n" +
                         "See available providers here: https://github.com/UnifiedPush/contrib/blob/main/distributors.md")
-                Linkify.addLinks(s, Linkify.WEB_URLS);
+                Linkify.addLinks(s, Linkify.WEB_URLS)
                 message.text = s
                 message.movementMethod = LinkMovementMethod.getInstance()
                 message.setPadding(16,16,16,16)
@@ -93,8 +93,7 @@ open class Registration {
 
     open fun newToken(context: Context): String {
         val token = UUID.randomUUID().toString()
-        context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE).edit()
-            .putString(PREF_MASTER_TOKEN, token).commit()
+        saveToken(context, token)
         return token
     }
 
@@ -112,9 +111,13 @@ open class Registration {
         val intent = Intent()
         intent.action = ACTION_REGISTER
         return context.packageManager.queryBroadcastReceivers(intent, 0).mapNotNull {
-            val packageName = it.activityInfo.packageName
-            Log.d("UP-Registration", "Found distributor with package name $packageName")
-            packageName
+            if (it.activityInfo.exported) {
+                val packageName = it.activityInfo.packageName
+                Log.d("UP-Registration", "Found distributor with package name $packageName")
+                packageName
+            } else {
+                null
+            }
         }
     }
 
