@@ -41,7 +41,7 @@ open class Registration {
                 val message = TextView(context)
                 val builder = AlertDialog.Builder(context)
                 val s = SpannableString("You need to install a distributor for push notifications to work.\n" +
-                        "See available providers here: https://github.com/UnifiedPush/contrib/blob/main/distributors.md")
+                        "More information here: https://unifiedpush.org/")
                 Linkify.addLinks(s, Linkify.WEB_URLS)
                 message.text = s
                 message.movementMethod = LinkMovementMethod.getInstance()
