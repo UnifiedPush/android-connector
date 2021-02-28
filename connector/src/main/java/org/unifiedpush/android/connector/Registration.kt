@@ -115,7 +115,7 @@ open class Registration {
         if ( !instances.contains(instance) ){
             instances.add(instance)
         }
-        prefs.edit().putStringSet(PREF_MASTER_INSTANCE, instances)
+        prefs.edit().putStringSet(PREF_MASTER_INSTANCE, instances).commit()
         prefs.edit().putString("$instance/$PREF_MASTER_TOKEN", token).commit()
     }
 
