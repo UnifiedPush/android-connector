@@ -12,8 +12,12 @@ import java.util.*
 
 open class Registration {
     open fun registerApp(context: Context) {
-        val token = getToken(context).let {
-            if (it.isEmpty()) newToken(context) else it
+        registerApp(context, INSTANCE_DEFAULT)
+    }
+
+    open fun registerApp(context: Context, instance: String) {
+        val token = getToken(context, instance).let {
+            if (it.isEmpty()) newToken(context, instance) else it
         }
         registerAppDistributor(context, getDistributor(context), token)
     }
@@ -28,7 +32,11 @@ open class Registration {
     }
 
     open fun registerAppWithDialog(context: Context) {
-        registerAppWithDialogFromList(context, getDistributors(context)) { registerApp(context) }
+        registerAppWithDialog(context, INSTANCE_DEFAULT)
+    }
+
+    open fun registerAppWithDialog(context: Context, instance: String) {
+        registerAppWithDialogFromList(context, getDistributors(context)) { registerApp(context, instance) }
     }
 
     fun registerAppWithDialogFromList(
@@ -72,11 +80,15 @@ open class Registration {
     }
 
     open fun unregisterApp(context: Context) {
-        unregisterAppDistributor(context, getDistributor(context))
+        unregisterApp(context, INSTANCE_DEFAULT)
     }
 
-    fun unregisterAppDistributor(context: Context, distributor: String) {
-        val token = getToken(context)
+    open fun unregisterApp(context: Context, instance: String) {
+        unregisterAppDistributor(context, getDistributor(context), instance)
+    }
+
+    fun unregisterAppDistributor(context: Context, distributor: String, instance: String) {
+        val token = getToken(context, instance)
         val broadcastIntent = Intent()
         broadcastIntent.`package` = distributor
         broadcastIntent.action = ACTION_UNREGISTER
@@ -85,26 +97,45 @@ open class Registration {
         context.sendBroadcast(broadcastIntent)
     }
 
-    fun getToken(context: Context): String {
+    fun getToken(context: Context, instance: String): String {
         return context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)?.getString(
-            PREF_MASTER_TOKEN, ""
+            "$instance/$PREF_MASTER_TOKEN", null
         ) ?: ""
     }
 
-    open fun newToken(context: Context): String {
+    open fun newToken(context: Context, instance: String): String {
         val token = UUID.randomUUID().toString()
-        saveToken(context, token)
+        saveToken(context, token, instance)
         return token
     }
 
-    fun saveToken(context: Context, token: String) {
-        context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE).edit()
-            .putString(PREF_MASTER_TOKEN, token).commit()
+    fun saveToken(context: Context, token: String, instance: String) {
+        val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
+        val instances = prefs.getStringSet(PREF_MASTER_INSTANCE, null)?: emptySet<String>().toMutableSet()
+        if ( !instances.contains(instance)){
+            instances.add(instance)
+        }
+        prefs.edit().putStringSet(PREF_MASTER_INSTANCE, instances)
+        prefs.edit().putString("$instance/$PREF_MASTER_TOKEN", token).commit()
     }
 
-    fun removeToken(context: Context) {
-        context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE).edit()
-            .remove(PREF_MASTER_TOKEN).commit()
+    fun removeToken(context: Context, instance: String) {
+        val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
+        val instances = prefs.getStringSet(PREF_MASTER_INSTANCE, null)?: emptySet<String>().toMutableSet()
+        instances.remove(instance)
+        prefs.edit().putStringSet(PREF_MASTER_INSTANCE, instances)
+        prefs.edit().remove("$instance/$PREF_MASTER_TOKEN").commit()
+    }
+
+    fun getInstance(context: Context, token: String): String? {
+        val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
+        val instances = prefs.getStringSet(PREF_MASTER_INSTANCE, null)?: emptySet<String>().toMutableSet()
+        instances.forEach {
+            if (prefs.getString("$it/$PREF_MASTER_TOKEN","").equals(token)) {
+                return it
+            }
+        }
+        return null
     }
 
     open fun getDistributors(context: Context): List<String> {
@@ -132,8 +163,9 @@ open class Registration {
         ) ?: ""
     }
 
-    fun removeDistributor(context: Context) {
-        context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE).edit()
-            .remove(PREF_MASTER_TOKEN).commit()
+    fun safeRemoveDistributor(context: Context) {
+        val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
+        prefs.getStringSet(PREF_MASTER_INSTANCE, null)
+                ?: prefs.edit().remove(PREF_MASTER_DISTRIBUTOR).commit()
     }
 }

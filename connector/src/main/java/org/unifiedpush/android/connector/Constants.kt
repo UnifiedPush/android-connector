@@ -7,6 +7,7 @@ package org.unifiedpush.android.connector
 
 const val PREF_MASTER = "UP-lib"
 const val PREF_MASTER_TOKEN = "UP-lib_token"
+const val PREF_MASTER_INSTANCE = "UP-lib_instances"
 const val PREF_MASTER_DISTRIBUTOR = "UP-lib_distributor"
 
 const val ACTION_NEW_ENDPOINT = "org.unifiedpush.android.connector.NEW_ENDPOINT"
@@ -24,3 +25,5 @@ const val EXTRA_TOKEN = "token"
 const val EXTRA_ENDPOINT = "endpoint"
 const val EXTRA_MESSAGE = "message"
 const val EXTRA_MESSAGE_ID = "id"
+
+const val INSTANCE_DEFAULT = "default"
