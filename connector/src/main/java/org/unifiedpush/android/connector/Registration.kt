@@ -112,7 +112,7 @@ open class Registration {
     fun saveToken(context: Context, token: String, instance: String) {
         val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
         val instances = prefs.getStringSet(PREF_MASTER_INSTANCE, null)?: emptySet<String>().toMutableSet()
-        if ( !instances.contains(instance)){
+        if ( !instances.contains(instance) ){
             instances.add(instance)
         }
         prefs.edit().putStringSet(PREF_MASTER_INSTANCE, instances)
