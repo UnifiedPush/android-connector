@@ -12,13 +12,17 @@ import java.util.*
 
 open class Registration {
     open fun registerApp(context: Context) {
-        val token = getToken(context).let {
-            if (it.isEmpty()) newToken(context) else it
+        registerApp(context, INSTANCE_DEFAULT)
+    }
+
+    open fun registerApp(context: Context, instance: String) {
+        val token = getToken(context, instance).let {
+            if (it.isEmpty()) newToken(context, instance) else it
         }
         registerAppDistributor(context, getDistributor(context), token)
     }
 
-    fun registerAppDistributor(context: Context, distributor: String, token: String) {
+    private fun registerAppDistributor(context: Context, distributor: String, token: String) {
         val broadcastIntent = Intent()
         broadcastIntent.`package` = distributor
         broadcastIntent.action = ACTION_REGISTER
@@ -28,10 +32,14 @@ open class Registration {
     }
 
     open fun registerAppWithDialog(context: Context) {
-        registerAppWithDialogFromList(context, getDistributors(context)) { registerApp(context) }
+        registerAppWithDialog(context, INSTANCE_DEFAULT)
     }
 
-    fun registerAppWithDialogFromList(
+    open fun registerAppWithDialog(context: Context, instance: String) {
+        registerAppWithDialogFromList(context, getDistributors(context)) { registerApp(context, instance) }
+    }
+
+    private fun registerAppWithDialogFromList(
         context: Context,
         distributors: List<String>,
         registerFunc: (context: Context) -> Unit
@@ -41,7 +49,7 @@ open class Registration {
                 val message = TextView(context)
                 val builder = AlertDialog.Builder(context)
                 val s = SpannableString("You need to install a distributor for push notifications to work.\n" +
-                        "See available providers here: https://github.com/UnifiedPush/contrib/blob/main/distributors.md")
+                        "More information here: https://unifiedpush.org/")
                 Linkify.addLinks(s, Linkify.WEB_URLS)
                 message.text = s
                 message.movementMethod = LinkMovementMethod.getInstance()
@@ -62,7 +70,7 @@ open class Registration {
                 builder.setItems(distributorsArray) { _, which ->
                     val distributor = distributorsArray[which]
                     saveDistributor(context, distributor)
-                    Log.d("CheckActivity", "distributor: $distributor")
+                    Log.d("UP-Registration", "saving: $distributor")
                     registerFunc(context)
                 }
                 val dialog: AlertDialog = builder.create()
@@ -72,11 +80,15 @@ open class Registration {
     }
 
     open fun unregisterApp(context: Context) {
-        unregisterAppDistributor(context, getDistributor(context))
+        unregisterApp(context, INSTANCE_DEFAULT)
     }
 
-    fun unregisterAppDistributor(context: Context, distributor: String) {
-        val token = getToken(context)
+    open fun unregisterApp(context: Context, instance: String) {
+        unregisterAppDistributor(context, getDistributor(context), instance)
+    }
+
+    private fun unregisterAppDistributor(context: Context, distributor: String, instance: String) {
+        val token = getToken(context, instance)
         val broadcastIntent = Intent()
         broadcastIntent.`package` = distributor
         broadcastIntent.action = ACTION_UNREGISTER
@@ -85,33 +97,52 @@ open class Registration {
         context.sendBroadcast(broadcastIntent)
     }
 
-    fun getToken(context: Context): String {
+    private fun getToken(context: Context, instance: String): String {
         return context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)?.getString(
-            PREF_MASTER_TOKEN, ""
+            "$instance/$PREF_MASTER_TOKEN", null
         ) ?: ""
     }
 
-    open fun newToken(context: Context): String {
+    open fun newToken(context: Context, instance: String): String {
         val token = UUID.randomUUID().toString()
-        saveToken(context, token)
+        saveToken(context, token, instance)
         return token
     }
 
-    fun saveToken(context: Context, token: String) {
-        context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE).edit()
-            .putString(PREF_MASTER_TOKEN, token).commit()
+    private fun saveToken(context: Context, token: String, instance: String) {
+        val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
+        val instances = prefs.getStringSet(PREF_MASTER_INSTANCE, null)?: emptySet<String>().toMutableSet()
+        if ( !instances.contains(instance) ){
+            instances.add(instance)
+        }
+        prefs.edit().putStringSet(PREF_MASTER_INSTANCE, instances).commit()
+        prefs.edit().putString("$instance/$PREF_MASTER_TOKEN", token).commit()
     }
 
-    fun removeToken(context: Context) {
-        context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE).edit()
-            .remove(PREF_MASTER_TOKEN).commit()
+    fun removeToken(context: Context, instance: String) {
+        val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
+        val instances = prefs.getStringSet(PREF_MASTER_INSTANCE, null)?: emptySet<String>().toMutableSet()
+        instances.remove(instance)
+        prefs.edit().putStringSet(PREF_MASTER_INSTANCE, instances)
+        prefs.edit().remove("$instance/$PREF_MASTER_TOKEN").commit()
+    }
+
+    fun getInstance(context: Context, token: String): String? {
+        val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
+        val instances = prefs.getStringSet(PREF_MASTER_INSTANCE, null)?: emptySet<String>().toMutableSet()
+        instances.forEach {
+            if (prefs.getString("$it/$PREF_MASTER_TOKEN","").equals(token)) {
+                return it
+            }
+        }
+        return null
     }
 
     open fun getDistributors(context: Context): List<String> {
         val intent = Intent()
         intent.action = ACTION_REGISTER
         return context.packageManager.queryBroadcastReceivers(intent, 0).mapNotNull {
-            if (it.activityInfo.exported) {
+            if (it.activityInfo.exported || it.activityInfo.packageName == context.packageName) {
                 val packageName = it.activityInfo.packageName
                 Log.d("UP-Registration", "Found distributor with package name $packageName")
                 packageName
@@ -132,8 +163,9 @@ open class Registration {
         ) ?: ""
     }
 
-    fun removeDistributor(context: Context) {
-        context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE).edit()
-            .remove(PREF_MASTER_TOKEN).commit()
+    fun safeRemoveDistributor(context: Context) {
+        val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
+        prefs.getStringSet(PREF_MASTER_INSTANCE, null)
+                ?: prefs.edit().remove(PREF_MASTER_DISTRIBUTOR).commit()
     }
 }
