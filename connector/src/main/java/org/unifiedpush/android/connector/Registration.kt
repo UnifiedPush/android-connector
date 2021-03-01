@@ -22,7 +22,7 @@ open class Registration {
         registerAppDistributor(context, getDistributor(context), token)
     }
 
-    fun registerAppDistributor(context: Context, distributor: String, token: String) {
+    private fun registerAppDistributor(context: Context, distributor: String, token: String) {
         val broadcastIntent = Intent()
         broadcastIntent.`package` = distributor
         broadcastIntent.action = ACTION_REGISTER
@@ -39,7 +39,7 @@ open class Registration {
         registerAppWithDialogFromList(context, getDistributors(context)) { registerApp(context, instance) }
     }
 
-    fun registerAppWithDialogFromList(
+    private fun registerAppWithDialogFromList(
         context: Context,
         distributors: List<String>,
         registerFunc: (context: Context) -> Unit
@@ -87,7 +87,7 @@ open class Registration {
         unregisterAppDistributor(context, getDistributor(context), instance)
     }
 
-    fun unregisterAppDistributor(context: Context, distributor: String, instance: String) {
+    private fun unregisterAppDistributor(context: Context, distributor: String, instance: String) {
         val token = getToken(context, instance)
         val broadcastIntent = Intent()
         broadcastIntent.`package` = distributor
@@ -97,7 +97,7 @@ open class Registration {
         context.sendBroadcast(broadcastIntent)
     }
 
-    fun getToken(context: Context, instance: String): String {
+    private fun getToken(context: Context, instance: String): String {
         return context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)?.getString(
             "$instance/$PREF_MASTER_TOKEN", null
         ) ?: ""
@@ -109,7 +109,7 @@ open class Registration {
         return token
     }
 
-    fun saveToken(context: Context, token: String, instance: String) {
+    private fun saveToken(context: Context, token: String, instance: String) {
         val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
         val instances = prefs.getStringSet(PREF_MASTER_INSTANCE, null)?: emptySet<String>().toMutableSet()
         if ( !instances.contains(instance) ){
