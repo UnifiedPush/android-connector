@@ -70,7 +70,7 @@ open class Registration {
                 builder.setItems(distributorsArray) { _, which ->
                     val distributor = distributorsArray[which]
                     saveDistributor(context, distributor)
-                    Log.d("CheckActivity", "distributor: $distributor")
+                    Log.d("UP-Registration", "saving: $distributor")
                     registerFunc(context)
                 }
                 val dialog: AlertDialog = builder.create()
@@ -142,7 +142,7 @@ open class Registration {
         val intent = Intent()
         intent.action = ACTION_REGISTER
         return context.packageManager.queryBroadcastReceivers(intent, 0).mapNotNull {
-            if (it.activityInfo.exported) {
+            if (it.activityInfo.exported || it.activityInfo.packageName == context.packageName) {
                 val packageName = it.activityInfo.packageName
                 Log.d("UP-Registration", "Found distributor with package name $packageName")
                 packageName
