@@ -21,7 +21,7 @@ jobs:
         with:
           name: example
           path: example/app/build/outputs/apk/mainFlavor/debug/app-mainFlavor-debug.apk
-      - if: startsWith(github.ref, 'refs/tags/v')
+      - if: startsWith(github.ref, 'refs/tags/')
         run: |
           cd example/app/build/outputs/apk/mainFlavor/release/
           echo $RELEASE_KEY | base64 -d > release-key.jks
@@ -33,7 +33,7 @@ jobs:
           RELEASE_KEY: ${{ secrets.RELEASE_KEY }}
           KEYPASS: ${{ secrets.KEYPASS }}
           STOREPASS: ${{ secrets.STOREPASS }}
-      - if: startsWith(github.ref, 'refs/tags/v')
+      - if: startsWith(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
