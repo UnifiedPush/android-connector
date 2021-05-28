@@ -123,7 +123,7 @@ open class Registration {
         val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
         val instances = prefs.getStringSet(PREF_MASTER_INSTANCE, null)?: emptySet<String>().toMutableSet()
         instances.remove(instance)
-        prefs.edit().putStringSet(PREF_MASTER_INSTANCE, instances)
+        prefs.edit().putStringSet(PREF_MASTER_INSTANCE, instances).commit()
         prefs.edit().remove("$instance/$PREF_MASTER_TOKEN").commit()
     }
 
@@ -165,7 +165,7 @@ open class Registration {
 
     fun safeRemoveDistributor(context: Context) {
         val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
-        prefs.getStringSet(PREF_MASTER_INSTANCE, null)
-                ?: prefs.edit().remove(PREF_MASTER_DISTRIBUTOR).commit()
+        if (prefs.getStringSet(PREF_MASTER_INSTANCE, emptySet())?.isEmpty()?: true)
+                prefs.edit().remove(PREF_MASTER_DISTRIBUTOR).commit()
     }
 }
