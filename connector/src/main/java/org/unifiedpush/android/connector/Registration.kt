@@ -11,18 +11,17 @@ import android.widget.TextView
 import java.util.*
 
 open class Registration {
-    open fun registerApp(context: Context) {
+    fun registerApp(context: Context) {
         registerApp(context, INSTANCE_DEFAULT)
     }
 
-    open fun registerApp(context: Context, instance: String) {
+    fun registerApp(context: Context, instance: String) {
         val token = getToken(context, instance).let {
             if (it.isEmpty()) newToken(context, instance) else it
         }
-        registerAppDistributor(context, getDistributor(context), token)
-    }
 
-    private fun registerAppDistributor(context: Context, distributor: String, token: String) {
+        val distributor = getPrefDistributor(context)
+
         val broadcastIntent = Intent()
         broadcastIntent.`package` = distributor
         broadcastIntent.action = ACTION_REGISTER
@@ -31,20 +30,20 @@ open class Registration {
         context.sendBroadcast(broadcastIntent)
     }
 
-    open fun registerAppWithDialog(context: Context) {
+    fun registerAppWithDialog(context: Context) {
         registerAppWithDialog(context, INSTANCE_DEFAULT)
     }
 
-    open fun registerAppWithDialog(context: Context, instance: String) {
-        registerAppWithDialogFromList(context, getDistributors(context)) { registerApp(context, instance) }
-    }
+    fun registerAppWithDialog(context: Context, instance: String) {
 
-    private fun registerAppWithDialogFromList(
-        context: Context,
-        distributors: List<String>,
-        registerFunc: (context: Context) -> Unit
-    ) {
-        when(distributors.size){
+        if (getDistributor(context).isNotEmpty()) {
+            registerApp(context, instance)
+            return
+        }
+
+        val distributors = getDistributors(context)
+
+        when(distributors.size) {
             0 -> {
                 val message = TextView(context)
                 val builder = AlertDialog.Builder(context)
@@ -60,7 +59,7 @@ open class Registration {
             }
             1 -> {
                 saveDistributor(context, distributors.first())
-                registerFunc(context)
+                registerApp(context, instance)
             }
             else ->{
                 val builder: AlertDialog.Builder = AlertDialog.Builder(context)
@@ -71,7 +70,7 @@ open class Registration {
                     val distributor = distributorsArray[which]
                     saveDistributor(context, distributor)
                     Log.d("UP-Registration", "saving: $distributor")
-                    registerFunc(context)
+                    registerApp(context, instance)
                 }
                 val dialog: AlertDialog = builder.create()
                 dialog.show()
@@ -79,15 +78,12 @@ open class Registration {
         }
     }
 
-    open fun unregisterApp(context: Context) {
+    fun unregisterApp(context: Context) {
         unregisterApp(context, INSTANCE_DEFAULT)
     }
 
-    open fun unregisterApp(context: Context, instance: String) {
-        unregisterAppDistributor(context, getDistributor(context), instance)
-    }
-
-    private fun unregisterAppDistributor(context: Context, distributor: String, instance: String) {
+    fun unregisterApp(context: Context, instance: String) {
+        val distributor = getPrefDistributor(context)
         val token = getToken(context, instance)
         val broadcastIntent = Intent()
         broadcastIntent.`package` = distributor
@@ -103,7 +99,7 @@ open class Registration {
         ) ?: ""
     }
 
-    open fun newToken(context: Context, instance: String): String {
+    private fun newToken(context: Context, instance: String): String {
         val token = UUID.randomUUID().toString()
         saveToken(context, token, instance)
         return token
@@ -138,7 +134,7 @@ open class Registration {
         return null
     }
 
-    open fun getDistributors(context: Context): List<String> {
+    fun getDistributors(context: Context): List<String> {
         val intent = Intent()
         intent.action = ACTION_REGISTER
         return context.packageManager.queryBroadcastReceivers(intent, 0).mapNotNull {
@@ -158,14 +154,32 @@ open class Registration {
     }
 
     fun getDistributor(context: Context): String {
+        val distributor = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)?.getString(
+            PREF_MASTER_DISTRIBUTOR, null ) ?: return ""
+
+        if (distributor in getDistributors(context)) {
+            Log.d("UP-Registration","Found saved distributor.")
+            return distributor
+        }
+        Log.d("UP-Registration","Saved distributor isn't accessible anymore: removing it.")
+        forceRemoveDistributor(context)
+        return ""
+    }
+
+    private fun getPrefDistributor(context: Context): String {
         return context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)?.getString(
-            PREF_MASTER_DISTRIBUTOR, ""
+            PREF_MASTER_DISTRIBUTOR, null
         ) ?: ""
     }
 
     fun safeRemoveDistributor(context: Context) {
         val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
-        if (prefs.getStringSet(PREF_MASTER_INSTANCE, emptySet())?.isEmpty()?: true)
+        if (prefs.getStringSet(PREF_MASTER_INSTANCE, emptySet())?.isEmpty() != false)
                 prefs.edit().remove(PREF_MASTER_DISTRIBUTOR).commit()
+    }
+
+    private fun forceRemoveDistributor(context: Context) {
+        val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
+        prefs.edit().remove(PREF_MASTER_DISTRIBUTOR).commit()
     }
 }
