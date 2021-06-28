@@ -3,6 +3,7 @@ package org.unifiedpush.android.connector
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.text.SpannableString
 import android.text.method.LinkMovementMethod
 import android.text.util.Linkify
@@ -66,7 +67,15 @@ open class Registration {
                 builder.setTitle("Choose a distributor")
 
                 val distributorsArray = distributors.toTypedArray()
-                builder.setItems(distributorsArray) { _, which ->
+                val distributorsNameArray = distributorsArray.map {
+                    try {
+                        val ai = context.packageManager.getApplicationInfo(it, 0)
+                        context.packageManager.getApplicationLabel(ai)
+                    } catch (e: PackageManager.NameNotFoundException) {
+                        it
+                    } as String
+                }.toTypedArray()
+                builder.setItems(distributorsNameArray) { _, which ->
                     val distributor = distributorsArray[which]
                     saveDistributor(context, distributor)
                     Log.d("UP-Registration", "saving: $distributor")
