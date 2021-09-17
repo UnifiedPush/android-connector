@@ -52,7 +52,7 @@ open class MessagingReceiver(private val handler: MessagingReceiverHandler) : Br
 
     private fun acknowledgeMessage(context: Context, id: String, token: String) {
         val broadcastIntent = Intent()
-        broadcastIntent.`package` = up.getDistributor(context)
+        broadcastIntent.`package` = up.getPrefDistributor(context)
         broadcastIntent.action = ACTION_MESSAGE_ACK
         broadcastIntent.putExtra(EXTRA_TOKEN, token)
         broadcastIntent.putExtra(EXTRA_MESSAGE_ID, id)

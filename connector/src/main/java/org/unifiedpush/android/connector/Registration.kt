@@ -124,7 +124,7 @@ open class Registration {
         prefs.edit().putString("$instance/$PREF_MASTER_TOKEN", token).commit()
     }
 
-    fun removeToken(context: Context, instance: String) {
+    internal fun removeToken(context: Context, instance: String) {
         val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
         val instances = prefs.getStringSet(PREF_MASTER_INSTANCE, null)?: emptySet<String>().toMutableSet()
         instances.remove(instance)
@@ -132,7 +132,7 @@ open class Registration {
         prefs.edit().remove("$instance/$PREF_MASTER_TOKEN").commit()
     }
 
-    fun getInstance(context: Context, token: String): String? {
+    internal fun getInstance(context: Context, token: String): String? {
         val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
         val instances = prefs.getStringSet(PREF_MASTER_INSTANCE, null)?: emptySet<String>().toMutableSet()
         instances.forEach {
@@ -175,7 +175,7 @@ open class Registration {
         return ""
     }
 
-    private fun getPrefDistributor(context: Context): String {
+    internal fun getPrefDistributor(context: Context): String {
         return context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)?.getString(
             PREF_MASTER_DISTRIBUTOR, null
         ) ?: ""
