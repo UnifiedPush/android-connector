@@ -132,7 +132,7 @@ open class Registration {
         prefs.edit().remove("$instance/$PREF_MASTER_TOKEN").commit()
     }
 
-    internal fun getInstance(context: Context, token: String): String? {
+    fun getInstance(context: Context, token: String): String? {
         val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
         val instances = prefs.getStringSet(PREF_MASTER_INSTANCE, null)?: emptySet<String>().toMutableSet()
         instances.forEach {
