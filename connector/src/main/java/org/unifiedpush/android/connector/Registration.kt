@@ -78,7 +78,7 @@ open class Registration {
                 builder.setItems(distributorsNameArray) { _, which ->
                     val distributor = distributorsArray[which]
                     saveDistributor(context, distributor)
-                    Log.d("UP-Registration", "saving: $distributor")
+                    Log.d(LOG_TAG, "saving: $distributor")
                     registerApp(context, instance)
                 }
                 val dialog: AlertDialog = builder.create()
@@ -149,7 +149,7 @@ open class Registration {
         return context.packageManager.queryBroadcastReceivers(intent, 0).mapNotNull {
             if (it.activityInfo.exported || it.activityInfo.packageName == context.packageName) {
                 val packageName = it.activityInfo.packageName
-                Log.d("UP-Registration", "Found distributor with package name $packageName")
+                Log.d(LOG_TAG, "Found distributor with package name $packageName")
                 packageName
             } else {
                 null
@@ -167,10 +167,10 @@ open class Registration {
             PREF_MASTER_DISTRIBUTOR, null ) ?: return ""
 
         if (distributor in getDistributors(context)) {
-            Log.d("UP-Registration","Found saved distributor.")
+            Log.d(LOG_TAG,"Found saved distributor.")
             return distributor
         }
-        Log.d("UP-Registration","Saved distributor isn't accessible anymore: removing it.")
+        Log.d(LOG_TAG,"Saved distributor isn't accessible anymore: removing it.")
         forceRemoveDistributor(context)
         return ""
     }

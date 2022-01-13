@@ -28,3 +28,4 @@ const val EXTRA_MESSAGE_ID = "id"
 
 const val INSTANCE_DEFAULT = "default"
 const val WAKE_LOCK_TAG = "android-connector:lock"
+const val LOG_TAG = "UnifiedPush"

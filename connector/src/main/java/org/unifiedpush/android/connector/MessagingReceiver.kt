@@ -32,7 +32,7 @@ open class MessagingReceiver : BroadcastReceiver() {
             // keep REFUSED for old distributors
             ACTION_REGISTRATION_FAILED, ACTION_REGISTRATION_REFUSED -> {
                 val message = intent.getStringExtra(EXTRA_MESSAGE) ?: "No reason supplied"
-                Log.i("UP-registration", "Failed: $message")
+                Log.i(LOG_TAG, "Failed: $message")
                 onRegistrationFailed(context, instance)
                 up.removeToken(context, instance)
             }
