@@ -27,3 +27,4 @@ const val EXTRA_MESSAGE = "message"
 const val EXTRA_MESSAGE_ID = "id"
 
 const val INSTANCE_DEFAULT = "default"
+const val WAKE_LOCK_TAG = "android-connector:lock"
