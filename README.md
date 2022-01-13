@@ -1,4 +1,4 @@
-# UP-lib
+# UnifiedPush android-connector
 ![Release](https://jitpack.io/v/UnifiedPush/android-connector.svg)
 
 This is a library that can be used by an end user application to receive notifications from any unified push provider.
