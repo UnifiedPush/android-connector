@@ -21,7 +21,7 @@ open class MessagingReceiver : BroadcastReceiver() {
                 ?: return
         val wakeLock = (context!!.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
             newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG).apply {
-                acquire(30000L /*30 secs*/)
+                acquire(60000L /*1min*/)
             }
         }
         when (intent.action) {
