@@ -28,7 +28,12 @@ open class Registration {
         context.sendBroadcast(broadcastIntent)
     }
 
-    fun registerAppWithDialog(context: Context, instance: String = INSTANCE_DEFAULT) {
+    fun registerAppWithDialog(context: Context,
+                              instance: String = INSTANCE_DEFAULT,
+                              dialogMessage: String = "You need to install a distributor " +
+                                      "for push notifications to work.\n" +
+                                      "More information here: https://unifiedpush.org/"
+    ) {
 
         if (getDistributor(context).isNotEmpty()) {
             registerApp(context, instance)
@@ -41,8 +46,7 @@ open class Registration {
             0 -> {
                 val message = TextView(context)
                 val builder = AlertDialog.Builder(context)
-                val s = SpannableString("You need to install a distributor for push notifications to work.\n" +
-                        "More information here: https://unifiedpush.org/")
+                val s = SpannableString(dialogMessage)
                 Linkify.addLinks(s, Linkify.WEB_URLS)
                 message.text = s
                 message.movementMethod = LinkMovementMethod.getInstance()
