@@ -12,11 +12,8 @@ import android.widget.TextView
 import java.util.*
 
 open class Registration {
-    fun registerApp(context: Context) {
-        registerApp(context, INSTANCE_DEFAULT)
-    }
 
-    fun registerApp(context: Context, instance: String) {
+    fun registerApp(context: Context, instance: String = INSTANCE_DEFAULT) {
         val token = getToken(context, instance).let {
             if (it.isEmpty()) newToken(context, instance) else it
         }
@@ -31,11 +28,7 @@ open class Registration {
         context.sendBroadcast(broadcastIntent)
     }
 
-    fun registerAppWithDialog(context: Context) {
-        registerAppWithDialog(context, INSTANCE_DEFAULT)
-    }
-
-    fun registerAppWithDialog(context: Context, instance: String) {
+    fun registerAppWithDialog(context: Context, instance: String = INSTANCE_DEFAULT) {
 
         if (getDistributor(context).isNotEmpty()) {
             registerApp(context, instance)
@@ -87,11 +80,7 @@ open class Registration {
         }
     }
 
-    fun unregisterApp(context: Context) {
-        unregisterApp(context, INSTANCE_DEFAULT)
-    }
-
-    fun unregisterApp(context: Context, instance: String) {
+    fun unregisterApp(context: Context, instance: String = INSTANCE_DEFAULT) {
         val distributor = getPrefDistributor(context)
         val token = getToken(context, instance)
         val broadcastIntent = Intent()
