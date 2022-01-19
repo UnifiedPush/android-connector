@@ -1,5 +1,6 @@
 package org.unifiedpush.android.connector
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
@@ -10,10 +11,18 @@ import android.text.util.Linkify
 import android.util.Log
 import android.widget.TextView
 import java.util.*
+import kotlin.collections.ArrayList
 
-open class Registration {
+object UnifiedPush {
 
-    fun registerApp(context: Context, instance: String = INSTANCE_DEFAULT) {
+    const val FEATURE_BYTES_MESSAGE = "org.unifiedpush.android.distributor.feature.BYTES_MESSAGE"
+
+    @JvmStatic
+    fun registerApp(context: Context,
+                    instance: String = INSTANCE_DEFAULT,
+                    features: ArrayList<String> = ArrayList(),
+                    messageForDistributor: String = ""
+    ) {
         val token = getToken(context, instance).let {
             if (it.isEmpty()) newToken(context, instance) else it
         }
@@ -24,15 +33,21 @@ open class Registration {
         broadcastIntent.`package` = distributor
         broadcastIntent.action = ACTION_REGISTER
         broadcastIntent.putExtra(EXTRA_TOKEN, token)
+        broadcastIntent.putExtra(EXTRA_FEATURES, features)
+        broadcastIntent.putExtra(EXTRA_MESSAGE, messageForDistributor)
         broadcastIntent.putExtra(EXTRA_APPLICATION, context.packageName)
         context.sendBroadcast(broadcastIntent)
     }
 
+    @JvmStatic
     fun registerAppWithDialog(context: Context,
                               instance: String = INSTANCE_DEFAULT,
                               dialogMessage: String = "You need to install a distributor " +
                                       "for push notifications to work.\n" +
-                                      "More information here: https://unifiedpush.org/"
+                                      "More information here:\n" +
+                                      "https://unifiedpush.org/",
+                              features: ArrayList<String> = ArrayList(),
+                              messageForDistributor: String = ""
     ) {
 
         if (getDistributor(context).isNotEmpty()) {
@@ -40,7 +55,7 @@ open class Registration {
             return
         }
 
-        val distributors = getDistributors(context)
+        val distributors = getDistributors(context, features)
 
         when(distributors.size) {
             0 -> {
@@ -50,14 +65,14 @@ open class Registration {
                 Linkify.addLinks(s, Linkify.WEB_URLS)
                 message.text = s
                 message.movementMethod = LinkMovementMethod.getInstance()
-                message.setPadding(16,16,16,16)
+                message.setPadding(32,32,32,32)
                 builder.setTitle("No distributor found")
                 builder.setView(message)
                 builder.show()
             }
             1 -> {
                 saveDistributor(context, distributors.first())
-                registerApp(context, instance)
+                registerApp(context, instance, features, messageForDistributor)
             }
             else ->{
                 val builder: AlertDialog.Builder = AlertDialog.Builder(context)
@@ -76,7 +91,7 @@ open class Registration {
                     val distributor = distributorsArray[which]
                     saveDistributor(context, distributor)
                     Log.d(LOG_TAG, "saving: $distributor")
-                    registerApp(context, instance)
+                    registerApp(context, instance, features, messageForDistributor)
                 }
                 val dialog: AlertDialog = builder.create()
                 dialog.show()
@@ -84,6 +99,7 @@ open class Registration {
         }
     }
 
+    @JvmStatic
     fun unregisterApp(context: Context, instance: String = INSTANCE_DEFAULT) {
         val distributor = getPrefDistributor(context)
         val token = getToken(context, instance)
@@ -107,6 +123,7 @@ open class Registration {
         return token
     }
 
+    @SuppressLint("MutatingSharedPrefs")
     private fun saveToken(context: Context, token: String, instance: String) {
         val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
         val instances = prefs.getStringSet(PREF_MASTER_INSTANCE, null)?: emptySet<String>().toMutableSet()
@@ -117,6 +134,7 @@ open class Registration {
         prefs.edit().putString("$instance/$PREF_MASTER_TOKEN", token).commit()
     }
 
+    @SuppressLint("MutatingSharedPrefs")
     internal fun removeToken(context: Context, instance: String) {
         val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
         val instances = prefs.getStringSet(PREF_MASTER_INSTANCE, null)?: emptySet<String>().toMutableSet()
@@ -136,25 +154,50 @@ open class Registration {
         return null
     }
 
-    fun getDistributors(context: Context): List<String> {
+    @JvmStatic
+    fun getDistributors(context: Context,
+                        features: ArrayList<String> = ArrayList()
+    ): List<String> {
+        val distributors = mutableListOf<String>()
         val intent = Intent()
         intent.action = ACTION_REGISTER
-        return context.packageManager.queryBroadcastReceivers(intent, 0).mapNotNull {
-            if (it.activityInfo.exported || it.activityInfo.packageName == context.packageName) {
+        distributors.addAll(
+            context.packageManager.queryBroadcastReceivers(intent,
+                PackageManager.GET_RESOLVED_FILTER
+            ).mapNotNull {
+                val actions = mutableListOf<String>()
                 val packageName = it.activityInfo.packageName
-                Log.d(LOG_TAG, "Found distributor with package name $packageName")
-                packageName
-            } else {
-                null
+                it.filter?.let { filter ->
+                    val actionIterator = filter.actionsIterator()
+                    while (actionIterator.hasNext()) {
+                        actions.add(actionIterator.next())
+                    }
+                }
+                features.forEach {
+                    feature -> if (feature !in actions){
+                        Log.i(LOG_TAG, "Found distributor $packageName" +
+                                " without feature $feature")
+                        return@mapNotNull null 
+                    } 
+                }
+                if (it.activityInfo.exported || packageName == context.packageName) {
+                    Log.d(LOG_TAG, "Found distributor with package name $packageName")
+                    packageName
+                } else {
+                    null
+                }
             }
-        }
+        )
+        return distributors
     }
 
+    @JvmStatic
     fun saveDistributor(context: Context, distributor: String) {
         context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE).edit()
             .putString(PREF_MASTER_DISTRIBUTOR, distributor).commit()
     }
 
+    @JvmStatic
     fun getDistributor(context: Context): String {
         val distributor = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)?.getString(
             PREF_MASTER_DISTRIBUTOR, null ) ?: return ""
@@ -174,14 +217,21 @@ open class Registration {
         ) ?: ""
     }
 
+    @JvmStatic
     fun safeRemoveDistributor(context: Context) {
         val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
         if (prefs.getStringSet(PREF_MASTER_INSTANCE, emptySet())?.isEmpty() != false)
                 prefs.edit().remove(PREF_MASTER_DISTRIBUTOR).commit()
     }
 
-    private fun forceRemoveDistributor(context: Context) {
+    @JvmStatic
+    fun forceRemoveDistributor(context: Context) {
         val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
+        val instances = prefs.getStringSet(PREF_MASTER_INSTANCE, null)?: emptySet<String>()
+        instances.forEach {
+            prefs.edit().remove("$it/$PREF_MASTER_TOKEN").commit()
+        }
+        prefs.edit().remove(PREF_MASTER_INSTANCE).commit()
         prefs.edit().remove(PREF_MASTER_DISTRIBUTOR).commit()
     }
 }
