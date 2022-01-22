@@ -4,50 +4,58 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import androidx.work.*
 
-interface MessagingReceiverHandler {
-    fun onNewEndpoint(context: Context?, endpoint: String, instance: String)
-    fun onRegistrationFailed(context: Context?, instance: String)
-    fun onRegistrationRefused(context: Context?, instance: String)
-    fun onUnregistered(context: Context?, instance: String)
-    fun onMessage(context: Context?, message: String, instance: String)
-}
+abstract class MessagingReceiverHandler(
+    private val context: Context,
+    workerParams: WorkerParameters
+) : Worker(context, workerParams) {
 
-open class MessagingReceiver(private val handler: MessagingReceiverHandler) : BroadcastReceiver() {
     private val up = Registration()
-    override fun onReceive(context: Context?, intent: Intent?) {
-        val token = intent!!.getStringExtra(EXTRA_TOKEN)
-        val instance = token?.let { up.getInstance(context!!, it) }
-                ?: return
-        when (intent.action) {
+
+    abstract fun onNewEndpoint(context: Context?, endpoint: String, instance: String)
+    abstract fun onRegistrationFailed(context: Context?, instance: String)
+    abstract fun onRegistrationRefused(context: Context?, instance: String)
+    abstract fun onUnregistered(context: Context?, instance: String)
+    abstract fun onMessage(context: Context?, message: String, instance: String)
+
+    override fun doWork(): Result {
+
+        val token = inputData.getString(EXTRA_TOKEN)
+
+        val instance = token?.let { up.getInstance(context, it) } ?: return Result.failure()
+
+        when (inputData.getString(EXTRA_ACTION)) {
             ACTION_NEW_ENDPOINT -> {
-                val endpoint = intent.getStringExtra(EXTRA_ENDPOINT)!!
-                this@MessagingReceiver.handler.onNewEndpoint(context, endpoint, instance)
+                val endpoint = inputData.getString(EXTRA_ENDPOINT)!!
+                onNewEndpoint(context, endpoint, instance)
             }
             ACTION_REGISTRATION_FAILED -> {
-                val message = intent.getStringExtra(EXTRA_MESSAGE) ?: "No reason supplied"
+                val message = inputData.getString(EXTRA_MESSAGE) ?: "No reason supplied"
                 Log.i("UP-registration", "Failed: $message")
-                this@MessagingReceiver.handler.onRegistrationFailed(context, instance)
-                up.removeToken(context!!, instance)
+                onRegistrationFailed(context, instance)
+                up.removeToken(context, instance)
             }
             ACTION_REGISTRATION_REFUSED -> {
-                val message = intent.getStringExtra(EXTRA_MESSAGE) ?: "No reason supplied"
+                val message = inputData.getString(EXTRA_MESSAGE) ?: "No reason supplied"
                 Log.i("UP-registration", "Refused: $message")
-                this@MessagingReceiver.handler.onRegistrationRefused(context, instance)
-                up.removeToken(context!!, instance)
+                onRegistrationRefused(context, instance)
+                up.removeToken(context, instance)
             }
             ACTION_UNREGISTERED -> {
-                this@MessagingReceiver.handler.onUnregistered(context, instance)
-                up.removeToken(context!!, instance)
+                onUnregistered(context, instance)
+                up.removeToken(context, instance)
                 up.safeRemoveDistributor(context)
             }
             ACTION_MESSAGE -> {
-                val message = intent.getStringExtra(EXTRA_MESSAGE)!!
-                val id = intent.getStringExtra(EXTRA_MESSAGE_ID) ?: ""
-                this@MessagingReceiver.handler.onMessage(context, message, instance)
-                acknowledgeMessage(context!!, id, token)
+                val message = inputData.getString(EXTRA_MESSAGE)!!
+                val id = inputData.getString(EXTRA_MESSAGE_ID) ?: ""
+                onMessage(context, message, instance)
+                acknowledgeMessage(context, id, token)
             }
         }
+
+        return Result.success()
     }
 
     private fun acknowledgeMessage(context: Context, id: String, token: String) {
@@ -57,5 +65,24 @@ open class MessagingReceiver(private val handler: MessagingReceiverHandler) : Br
         broadcastIntent.putExtra(EXTRA_TOKEN, token)
         broadcastIntent.putExtra(EXTRA_MESSAGE_ID, id)
         context.sendBroadcast(broadcastIntent)
+    }
+}
+
+open class MessagingReceiver(private val handlerClass: Class<out MessagingReceiverHandler>) :
+    BroadcastReceiver() {
+
+    override fun onReceive(context: Context, intent: Intent) {
+        val data = Data.Builder()
+
+        data.putString(EXTRA_ACTION, intent.action)
+        data.putString(EXTRA_TOKEN, intent.getStringExtra(EXTRA_TOKEN))
+        data.putString(EXTRA_ENDPOINT, intent.getStringExtra(EXTRA_ENDPOINT))
+        data.putString(EXTRA_MESSAGE, intent.getStringExtra(EXTRA_MESSAGE))
+        data.putString(EXTRA_MESSAGE_ID, intent.getStringExtra(EXTRA_MESSAGE_ID))
+
+        val workRequest = OneTimeWorkRequest.Builder(handlerClass)
+            .setInputData(data.build())
+            .build()
+        WorkManager.getInstance(context).enqueue(workRequest)
     }
 }

@@ -27,3 +27,6 @@ const val EXTRA_MESSAGE = "message"
 const val EXTRA_MESSAGE_ID = "id"
 
 const val INSTANCE_DEFAULT = "default"
+
+// connector internal extra for passing an intent action to a worker
+const val EXTRA_ACTION = "action"
