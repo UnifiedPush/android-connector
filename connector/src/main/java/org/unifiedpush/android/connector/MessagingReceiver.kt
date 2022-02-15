@@ -8,16 +8,16 @@ import android.util.Log
 
 open class MessagingReceiver : BroadcastReceiver() {
 
-    open fun onNewEndpoint(context: Context?, endpoint: String, instance: String) {}
-    open fun onRegistrationFailed(context: Context?, instance: String) {}
-    open fun onUnregistered(context: Context?, instance: String) {}
-    open fun onMessage(context: Context?, message: ByteArray, instance: String) {}
+    open fun onNewEndpoint(context: Context, endpoint: String, instance: String) {}
+    open fun onRegistrationFailed(context: Context, instance: String) {}
+    open fun onUnregistered(context: Context, instance: String) {}
+    open fun onMessage(context: Context, message: ByteArray, instance: String) {}
 
-    override fun onReceive(context: Context?, intent: Intent?) {
-        val token = intent!!.getStringExtra(EXTRA_TOKEN)
-        val instance = token?.let { UnifiedPush.getInstance(context!!, it) }
+    override fun onReceive(context: Context, intent: Intent) {
+        val token = intent.getStringExtra(EXTRA_TOKEN)
+        val instance = token?.let { UnifiedPush.getInstance(context, it) }
                 ?: return
-        val wakeLock = (context!!.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
+        val wakeLock = (context.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
             newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG).apply {
                 acquire(60000L /*1min*/)
             }
