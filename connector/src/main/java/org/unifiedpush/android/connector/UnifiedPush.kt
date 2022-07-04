@@ -1,6 +1,5 @@
 package org.unifiedpush.android.connector
 
-import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
@@ -10,7 +9,6 @@ import android.text.method.LinkMovementMethod
 import android.text.util.Linkify
 import android.util.Log
 import android.widget.TextView
-import java.util.*
 import kotlin.collections.ArrayList
 
 object UnifiedPush {
@@ -23,11 +21,12 @@ object UnifiedPush {
                     features: ArrayList<String> = ArrayList(),
                     messageForDistributor: String = ""
     ) {
-        val token = getToken(context, instance).let {
-            if (it.isEmpty()) newToken(context, instance) else it
+        val store = Store(context)
+        val token = store.getToken(instance) ?:run {
+            store.newToken(instance)
         }
 
-        val distributor = getPrefDistributor(context)
+        val distributor = store.getDistributor()
 
         val broadcastIntent = Intent()
         broadcastIntent.`package` = distributor
@@ -101,58 +100,16 @@ object UnifiedPush {
 
     @JvmStatic
     fun unregisterApp(context: Context, instance: String = INSTANCE_DEFAULT) {
-        val distributor = getPrefDistributor(context)
-        val token = getToken(context, instance)
+        val store = Store(context)
+        val distributor = store.getDistributor()
+        val token = store.getToken(instance)
         val broadcastIntent = Intent()
         broadcastIntent.`package` = distributor
         broadcastIntent.action = ACTION_UNREGISTER
         broadcastIntent.putExtra(EXTRA_TOKEN, token)
-        removeToken(context, instance)
+        store.removeInstance(instance)
         safeRemoveDistributor(context)
         context.sendBroadcast(broadcastIntent)
-    }
-
-    private fun getToken(context: Context, instance: String): String {
-        return context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)?.getString(
-            "$instance/$PREF_MASTER_TOKEN", null
-        ) ?: ""
-    }
-
-    private fun newToken(context: Context, instance: String): String {
-        val token = UUID.randomUUID().toString()
-        saveToken(context, token, instance)
-        return token
-    }
-
-    @SuppressLint("MutatingSharedPrefs")
-    private fun saveToken(context: Context, token: String, instance: String) {
-        val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
-        val instances = prefs.getStringSet(PREF_MASTER_INSTANCE, null)?: emptySet<String>().toMutableSet()
-        if ( !instances.contains(instance) ){
-            instances.add(instance)
-        }
-        prefs.edit().putStringSet(PREF_MASTER_INSTANCE, instances).commit()
-        prefs.edit().putString("$instance/$PREF_MASTER_TOKEN", token).commit()
-    }
-
-    @SuppressLint("MutatingSharedPrefs")
-    internal fun removeToken(context: Context, instance: String) {
-        val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
-        val instances = prefs.getStringSet(PREF_MASTER_INSTANCE, null)?: emptySet<String>().toMutableSet()
-        instances.remove(instance)
-        prefs.edit().putStringSet(PREF_MASTER_INSTANCE, instances).commit()
-        prefs.edit().remove("$instance/$PREF_MASTER_TOKEN").commit()
-    }
-
-    fun getInstance(context: Context, token: String): String? {
-        val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
-        val instances = prefs.getStringSet(PREF_MASTER_INSTANCE, null)?: emptySet<String>().toMutableSet()
-        instances.forEach {
-            if (prefs.getString("$it/$PREF_MASTER_TOKEN","").equals(token)) {
-                return it
-            }
-        }
-        return null
     }
 
     @JvmStatic
@@ -194,45 +151,36 @@ object UnifiedPush {
 
     @JvmStatic
     fun saveDistributor(context: Context, distributor: String) {
-        context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE).edit()
-            .putString(PREF_MASTER_DISTRIBUTOR, distributor).commit()
+        Store(context).saveDistributor(distributor)
     }
 
     @JvmStatic
     fun getDistributor(context: Context): String {
-        val distributor = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)?.getString(
-            PREF_MASTER_DISTRIBUTOR, null ) ?: return ""
-
-        if (distributor in getDistributors(context)) {
-            Log.d(LOG_TAG,"Found saved distributor.")
-            return distributor
+        val store = Store(context)
+        store.getDistributor()?.let { distributor ->
+            if (distributor in getDistributors(context)) {
+                Log.d(LOG_TAG,"Found saved distributor.")
+                return distributor
+            }
         }
-        Log.d(LOG_TAG,"Saved distributor isn't accessible anymore: removing it.")
-        forceRemoveDistributor(context)
         return ""
-    }
-
-    internal fun getPrefDistributor(context: Context): String {
-        return context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)?.getString(
-            PREF_MASTER_DISTRIBUTOR, null
-        ) ?: ""
     }
 
     @JvmStatic
     fun safeRemoveDistributor(context: Context) {
-        val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
-        if (prefs.getStringSet(PREF_MASTER_INSTANCE, emptySet())?.isEmpty() != false)
-                prefs.edit().remove(PREF_MASTER_DISTRIBUTOR).commit()
+        val store = Store(context)
+        if (store.getInstances().isEmpty()) {
+            store.removeDistributor()
+        }
     }
 
     @JvmStatic
     fun forceRemoveDistributor(context: Context) {
-        val prefs = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
-        val instances = prefs.getStringSet(PREF_MASTER_INSTANCE, null)?: emptySet<String>()
-        instances.forEach {
-            prefs.edit().remove("$it/$PREF_MASTER_TOKEN").commit()
+        val store = Store(context)
+        store.getInstances().forEach {
+            store.removeInstance(it)
         }
-        prefs.edit().remove(PREF_MASTER_INSTANCE).commit()
-        prefs.edit().remove(PREF_MASTER_DISTRIBUTOR).commit()
+        store.removeInstances()
+        store.removeDistributor()
     }
 }
