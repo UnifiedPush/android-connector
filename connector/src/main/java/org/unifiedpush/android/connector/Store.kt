@@ -71,6 +71,18 @@ internal class Store (context: Context) {
         preferences.edit().remove(PREF_MASTER_DISTRIBUTOR).apply()
     }
 
+    internal fun saveNoDistributorAck() {
+        preferences.edit().putBoolean(PREF_MASTER_NO_DISTRIB_DIALOG_ACK, true).apply()
+    }
+
+    internal fun getNoDistributorAck(): Boolean {
+        return preferences.getBoolean(PREF_MASTER_NO_DISTRIB_DIALOG_ACK, false)
+    }
+
+    internal fun removeNoDistributorAck() {
+        preferences.edit().remove(PREF_MASTER_NO_DISTRIB_DIALOG_ACK).apply()
+    }
+
     companion object {
         private lateinit var preferences: SharedPreferences
     }

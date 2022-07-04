@@ -9,6 +9,7 @@ const val PREF_MASTER = "unifiedpush.connector"
 const val PREF_MASTER_TOKEN = "unifiedpush.connector"
 const val PREF_MASTER_INSTANCE = "unifiedpush.instances"
 const val PREF_MASTER_DISTRIBUTOR = "unifiedpush.distributor"
+const val PREF_MASTER_NO_DISTRIB_DIALOG_ACK = "unifiedpush.no_distrib_dialog"
 
 const val ACTION_NEW_ENDPOINT = "org.unifiedpush.android.connector.NEW_ENDPOINT"
 const val ACTION_REGISTRATION_FAILED = "org.unifiedpush.android.connector.REGISTRATION_FAILED"

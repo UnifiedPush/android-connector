@@ -41,14 +41,28 @@ object UnifiedPush {
     @JvmStatic
     fun registerAppWithDialog(context: Context,
                               instance: String = INSTANCE_DEFAULT,
-                              dialogMessage: String = "You need to install a distributor " +
-                                      "for push notifications to work.\n" +
-                                      "More information here:\n" +
-                                      "https://unifiedpush.org/",
+                              dialogMessage: String,
                               features: ArrayList<String> = ArrayList(),
                               messageForDistributor: String = ""
     ) {
+        val dialogContent = DialogContent(
+            NoDistribDialogMessage = dialogMessage
+        )
+        registerAppWithDialog(
+            context,
+            instance,
+            dialogContent,
+            features,
+            messageForDistributor)
+    }
 
+    @JvmStatic
+    fun registerAppWithDialog(context: Context,
+                              instance: String = INSTANCE_DEFAULT,
+                              dialogContent: DialogContent = DialogContent(),
+                              features: ArrayList<String> = ArrayList(),
+                              messageForDistributor: String = ""
+    ) {
         if (getDistributor(context).isNotEmpty()) {
             registerApp(context, instance)
             return
@@ -58,16 +72,25 @@ object UnifiedPush {
 
         when(distributors.size) {
             0 -> {
-                val message = TextView(context)
-                val builder = AlertDialog.Builder(context)
-                val s = SpannableString(dialogMessage)
-                Linkify.addLinks(s, Linkify.WEB_URLS)
-                message.text = s
-                message.movementMethod = LinkMovementMethod.getInstance()
-                message.setPadding(32,32,32,32)
-                builder.setTitle("No distributor found")
-                builder.setView(message)
-                builder.show()
+                if (!Store(context).getNoDistributorAck()) {
+                    val message = TextView(context)
+                    val builder = AlertDialog.Builder(context)
+                    val s = SpannableString(dialogContent.NoDistribDialogMessage)
+                    Linkify.addLinks(s, Linkify.WEB_URLS)
+                    message.text = s
+                    message.movementMethod = LinkMovementMethod.getInstance()
+                    message.setPadding(32, 32, 32, 32)
+                    builder.setTitle(dialogContent.NoDistribTitle)
+                    builder.setView(message)
+                    builder.setPositiveButton(dialogContent.NoDistribOKButton) { _, _ ->
+                    }
+                    builder.setNegativeButton(dialogContent.NoDistribIgnoreButton) { _, _ ->
+                        Store(context).saveNoDistributorAck()
+                    }
+                    builder.show()
+                } else {
+                    Log.d(LOG_TAG, "User already know there isn't any distributor")
+                }
             }
             1 -> {
                 saveDistributor(context, distributors.first())
@@ -75,7 +98,7 @@ object UnifiedPush {
             }
             else ->{
                 val builder: AlertDialog.Builder = AlertDialog.Builder(context)
-                builder.setTitle("Choose a distributor")
+                builder.setTitle(dialogContent.ChooseTitle)
 
                 val distributorsArray = distributors.toTypedArray()
                 val distributorsNameArray = distributorsArray.map {
@@ -96,6 +119,11 @@ object UnifiedPush {
                 dialog.show()
             }
         }
+    }
+
+    @JvmStatic
+    fun removeNoDistributorDialogACK(context: Context) {
+        Store(context).removeNoDistributorAck()
     }
 
     @JvmStatic
