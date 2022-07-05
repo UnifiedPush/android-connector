@@ -39,19 +39,19 @@ object UnifiedPush {
     }
 
     @JvmStatic
+    @Deprecated("Replace with registerAppWithDialog(" +
+            "Context, String, RegistrationDialogContent, ArrayList<String>, String" +
+            ")")
     fun registerAppWithDialog(context: Context,
                               instance: String = INSTANCE_DEFAULT,
                               dialogMessage: String,
                               features: ArrayList<String> = ArrayList(),
                               messageForDistributor: String = ""
     ) {
-        val dialogContent = DialogContent(
-            NoDistribDialogMessage = dialogMessage
-        )
         registerAppWithDialog(
             context,
             instance,
-            dialogContent,
+            RegistrationDialogContent().apply { noDistributorDialog.message = dialogMessage },
             features,
             messageForDistributor)
     }
@@ -59,7 +59,8 @@ object UnifiedPush {
     @JvmStatic
     fun registerAppWithDialog(context: Context,
                               instance: String = INSTANCE_DEFAULT,
-                              dialogContent: DialogContent = DialogContent(),
+                              registrationDialogContent: RegistrationDialogContent
+                              = RegistrationDialogContent(),
                               features: ArrayList<String> = ArrayList(),
                               messageForDistributor: String = ""
     ) {
@@ -75,17 +76,18 @@ object UnifiedPush {
                 if (!Store(context).getNoDistributorAck()) {
                     val message = TextView(context)
                     val builder = AlertDialog.Builder(context)
-                    val s = SpannableString(dialogContent.NoDistribDialogMessage)
+                    val s = SpannableString(registrationDialogContent.noDistributorDialog.message)
                     Linkify.addLinks(s, Linkify.WEB_URLS)
                     message.text = s
                     message.movementMethod = LinkMovementMethod.getInstance()
                     message.setPadding(32, 32, 32, 32)
-                    builder.setTitle(dialogContent.NoDistribTitle)
+                    builder.setTitle(registrationDialogContent.noDistributorDialog.title)
                     builder.setView(message)
-                    builder.setPositiveButton(dialogContent.NoDistribOKButton) { _, _ ->
+                    builder.setPositiveButton(registrationDialogContent.noDistributorDialog.okButton) {
+                            _, _ ->
                     }
-                    builder.setNegativeButton(dialogContent.NoDistribIgnoreButton) { _, _ ->
-                        Store(context).saveNoDistributorAck()
+                    builder.setNegativeButton(registrationDialogContent.noDistributorDialog.ignoreButton) {
+                            _, _ -> Store(context).saveNoDistributorAck()
                     }
                     builder.show()
                 } else {
@@ -98,7 +100,7 @@ object UnifiedPush {
             }
             else ->{
                 val builder: AlertDialog.Builder = AlertDialog.Builder(context)
-                builder.setTitle(dialogContent.ChooseTitle)
+                builder.setTitle(registrationDialogContent.chooseDialog.title)
 
                 val distributorsArray = distributors.toTypedArray()
                 val distributorsNameArray = distributorsArray.map {
