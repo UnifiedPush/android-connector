@@ -146,37 +146,26 @@ object UnifiedPush {
     fun getDistributors(context: Context,
                         features: ArrayList<String> = ArrayList()
     ): List<String> {
-        val distributors = mutableListOf<String>()
-        val intent = Intent()
-        intent.action = ACTION_REGISTER
-        distributors.addAll(
-            context.packageManager.queryBroadcastReceivers(intent,
-                PackageManager.GET_RESOLVED_FILTER
-            ).mapNotNull {
-                val actions = mutableListOf<String>()
-                val packageName = it.activityInfo.packageName
-                it.filter?.let { filter ->
-                    val actionIterator = filter.actionsIterator()
-                    while (actionIterator.hasNext()) {
-                        actions.add(actionIterator.next())
-                    }
-                }
-                features.forEach {
-                    feature -> if (feature !in actions){
-                        Log.i(LOG_TAG, "Found distributor $packageName" +
-                                " without feature $feature")
-                        return@mapNotNull null 
-                    } 
-                }
-                if (it.activityInfo.exported || packageName == context.packageName) {
-                    Log.d(LOG_TAG, "Found distributor with package name $packageName")
-                    packageName
-                } else {
-                    null
+        return context.packageManager.queryBroadcastReceivers(
+            Intent(ACTION_REGISTER),
+            PackageManager.GET_RESOLVED_FILTER
+        ).mapNotNull {
+            val packageName = it.activityInfo.packageName
+
+            features.forEach { feature ->
+                if (!it.filter.hasAction(feature)){
+                    Log.i(LOG_TAG, "Found distributor $packageName" +
+                            " without feature $feature")
+                    return@mapNotNull null
                 }
             }
-        )
-        return distributors
+            if (it.activityInfo.exported || packageName == context.packageName) {
+                Log.d(LOG_TAG, "Found distributor with package name $packageName")
+                packageName
+            } else {
+                null
+            }
+        }
     }
 
     @JvmStatic
