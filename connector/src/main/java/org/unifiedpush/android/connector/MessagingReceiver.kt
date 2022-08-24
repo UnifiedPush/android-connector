@@ -38,8 +38,7 @@ open class MessagingReceiver : BroadcastReceiver() {
             }
             ACTION_UNREGISTERED -> {
                 onUnregistered(context, instance)
-                store.removeInstance(instance)
-                UnifiedPush.safeRemoveDistributor(context)
+                store.removeInstance(instance, removeDistributor = true)
             }
             ACTION_MESSAGE -> {
                 // keep EXTRA_MESSAGEv1 for AND_1

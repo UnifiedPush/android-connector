@@ -47,12 +47,15 @@ internal class Store (context: Context) {
     }
 
     @SuppressLint("MutatingSharedPrefs")
-    internal fun removeInstance(instance: String) {
+    internal fun removeInstance(instance: String, removeDistributor: Boolean = false) {
         val instances = preferences.getStringSet(PREF_MASTER_INSTANCE, null)
             ?: emptySet<String>().toMutableSet()
         instances.remove(instance)
         preferences.edit().putStringSet(PREF_MASTER_INSTANCE, instances).apply()
         preferences.edit().remove("$instance/$PREF_MASTER_TOKEN").apply()
+        if (removeDistributor && instances.isEmpty()) {
+            removeDistributor()
+        }
     }
 
     internal fun removeInstances() {

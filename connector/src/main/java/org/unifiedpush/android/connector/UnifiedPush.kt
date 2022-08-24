@@ -137,8 +137,7 @@ object UnifiedPush {
         broadcastIntent.`package` = distributor
         broadcastIntent.action = ACTION_UNREGISTER
         broadcastIntent.putExtra(EXTRA_TOKEN, token)
-        store.removeInstance(instance)
-        safeRemoveDistributor(context)
+        store.removeInstance(instance, removeDistributor = true)
         context.sendBroadcast(broadcastIntent)
     }
 
