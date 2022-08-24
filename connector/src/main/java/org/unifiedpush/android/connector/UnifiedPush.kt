@@ -26,7 +26,7 @@ object UnifiedPush {
             store.newToken(instance)
         }
 
-        val distributor = store.getDistributor()
+        val distributor = store.getDistributor() ?: return
 
         val broadcastIntent = Intent()
         broadcastIntent.`package` = distributor
@@ -131,8 +131,8 @@ object UnifiedPush {
     @JvmStatic
     fun unregisterApp(context: Context, instance: String = INSTANCE_DEFAULT) {
         val store = Store(context)
-        val distributor = store.getDistributor()
-        val token = store.getToken(instance)
+        val distributor = store.getDistributor() ?: return
+        val token = store.getToken(instance) ?: return
         val broadcastIntent = Intent()
         broadcastIntent.`package` = distributor
         broadcastIntent.action = ACTION_UNREGISTER
