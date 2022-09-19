@@ -1,9 +1,12 @@
 package org.unifiedpush.android.connector
 
+import android.annotation.TargetApi
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import android.os.Build
 import android.text.SpannableString
 import android.text.method.LinkMovementMethod
 import android.text.util.Linkify
@@ -105,7 +108,15 @@ object UnifiedPush {
                 val distributorsArray = distributors.toTypedArray()
                 val distributorsNameArray = distributorsArray.map {
                     try {
-                        val ai = context.packageManager.getApplicationInfo(it, 0)
+                        val ai = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            context.packageManager.getApplicationInfo(it,
+                                PackageManager.ApplicationInfoFlags.of(
+                                PackageManager.GET_META_DATA.toLong()
+                                )
+                            )
+                        } else {
+                            context.packageManager.getApplicationInfo(it, 0)
+                        }
                         context.packageManager.getApplicationLabel(ai)
                     } catch (e: PackageManager.NameNotFoundException) {
                         it
@@ -145,26 +156,35 @@ object UnifiedPush {
     fun getDistributors(context: Context,
                         features: ArrayList<String> = ArrayList()
     ): List<String> {
-        return context.packageManager.queryBroadcastReceivers(
-            Intent(ACTION_REGISTER),
-            PackageManager.GET_RESOLVED_FILTER
-        ).mapNotNull {
-            val packageName = it.activityInfo.packageName
-
-            features.forEach { feature ->
-                if (!it.filter.hasAction(feature)){
-                    Log.i(LOG_TAG, "Found distributor $packageName" +
-                            " without feature $feature")
-                    return@mapNotNull null
+        return (
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    context.packageManager.queryBroadcastReceivers(
+                        Intent(ACTION_REGISTER),
+                        PackageManager.ResolveInfoFlags.of(PackageManager.GET_META_DATA.toLong())
+                    )
+                } else {
+                    context.packageManager.queryBroadcastReceivers(
+                        Intent(ACTION_REGISTER),
+                        PackageManager.GET_RESOLVED_FILTER
+                    )
                 }
-            }
-            if (it.activityInfo.exported || packageName == context.packageName) {
-                Log.d(LOG_TAG, "Found distributor with package name $packageName")
-                packageName
-            } else {
-                null
-            }
-        }
+                ).mapNotNull {
+                val packageName = it.activityInfo.packageName
+
+                features.forEach { feature ->
+                    if (!it.filter.hasAction(feature)){
+                        Log.i(LOG_TAG, "Found distributor $packageName" +
+                                " without feature $feature")
+                        return@mapNotNull null
+                    }
+                }
+                if (it.activityInfo.exported || packageName == context.packageName) {
+                    Log.d(LOG_TAG, "Found distributor with package name $packageName")
+                    packageName
+                } else {
+                    null
+                }
+                }
     }
 
     @JvmStatic
