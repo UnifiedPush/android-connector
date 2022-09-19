@@ -27,6 +27,10 @@ android {
         }
     }
 
+    buildFeatures {
+        buildConfig = false
+    }
+
     namespace "org.unifiedpush.android.connector"
 }
 
