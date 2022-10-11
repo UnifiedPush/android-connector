@@ -172,10 +172,14 @@ object UnifiedPush {
                 val packageName = it.activityInfo.packageName
 
                 features.forEach { feature ->
-                    if (it.filter?.hasAction(feature) == false){
-                        Log.i(LOG_TAG, "Found distributor $packageName" +
-                                " without feature $feature")
-                        return@mapNotNull null
+                    it.filter?.let { filter ->
+                        if (!filter.hasAction(feature)){
+                            Log.i(LOG_TAG, "Found distributor $packageName" +
+                                    " without feature $feature")
+                            return@mapNotNull null
+                        }
+                    } ?: run {
+                        Log.w(LOG_TAG, "Cannot filter distributors with features")
                     }
                 }
                 if (it.activityInfo.exported || packageName == context.packageName) {
