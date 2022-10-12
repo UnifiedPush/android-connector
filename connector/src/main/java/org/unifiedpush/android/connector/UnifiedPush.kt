@@ -160,7 +160,10 @@ object UnifiedPush {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     context.packageManager.queryBroadcastReceivers(
                         Intent(ACTION_REGISTER),
-                        PackageManager.ResolveInfoFlags.of(PackageManager.GET_META_DATA.toLong())
+                        PackageManager.ResolveInfoFlags.of(
+                            PackageManager.GET_META_DATA.toLong()
+                                + PackageManager.GET_RESOLVED_FILTER.toLong()
+                        )
                     )
                 } else {
                     context.packageManager.queryBroadcastReceivers(
