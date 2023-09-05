@@ -17,7 +17,7 @@ open class MessagingReceiver : BroadcastReceiver() {
         val token = intent.getStringExtra(EXTRA_TOKEN)
         val store = Store(context)
         val instance = token?.let {
-            store.getInstance(it)
+            store.tryGetInstance(it)
         } ?: return
         val wakeLock = (context.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
             newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG).apply {
@@ -46,7 +46,7 @@ open class MessagingReceiver : BroadcastReceiver() {
                     ?: intent.getStringExtra(EXTRA_MESSAGE)!!.toByteArray()
                 val id = intent.getStringExtra(EXTRA_MESSAGE_ID) ?: ""
                 onMessage(context, message, instance)
-                store.getDistributor()?.let {
+                store.tryGetDistributor()?.let {
                     acknowledgeMessage(context, it, id, token)
                 }
             }

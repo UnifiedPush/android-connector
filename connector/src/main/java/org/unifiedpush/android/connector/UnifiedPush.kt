@@ -1,10 +1,8 @@
 package org.unifiedpush.android.connector
 
-import android.annotation.TargetApi
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import android.text.SpannableString
@@ -25,11 +23,9 @@ object UnifiedPush {
                     messageForDistributor: String = ""
     ) {
         val store = Store(context)
-        val token = store.getToken(instance) ?:run {
-            store.newToken(instance)
-        }
+        val token = store.getTokenOrNew(instance)
 
-        val distributor = store.getDistributor() ?: return
+        val distributor = store.tryGetDistributor() ?: return
 
         val broadcastIntent = Intent()
         broadcastIntent.`package` = distributor
@@ -142,8 +138,8 @@ object UnifiedPush {
     @JvmStatic
     fun unregisterApp(context: Context, instance: String = INSTANCE_DEFAULT) {
         val store = Store(context)
-        val distributor = store.getDistributor() ?: return
-        val token = store.getToken(instance) ?: return
+        val distributor = store.tryGetDistributor() ?: return
+        val token = store.tryGetToken(instance) ?: return
         val broadcastIntent = Intent()
         broadcastIntent.`package` = distributor
         broadcastIntent.action = ACTION_UNREGISTER
@@ -202,7 +198,7 @@ object UnifiedPush {
     @JvmStatic
     fun getDistributor(context: Context): String {
         val store = Store(context)
-        store.getDistributor()?.let { distributor ->
+        store.tryGetDistributor()?.let { distributor ->
             if (distributor in getDistributors(context)) {
                 Log.d(LOG_TAG,"Found saved distributor.")
                 return distributor

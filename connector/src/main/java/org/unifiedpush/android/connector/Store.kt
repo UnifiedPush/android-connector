@@ -11,30 +11,34 @@ internal class Store (context: Context) {
         preferences = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
     }
 
-    internal fun newToken(instance: String): String {
-        val token = UUID.randomUUID().toString()
-        saveToken(token, instance)
-        return token
-    }
-
-    @SuppressLint("MutatingSharedPrefs")
-    private fun saveToken(token: String, instance: String) {
-        val instances = preferences.getStringSet(PREF_MASTER_INSTANCE, null)
-            ?: emptySet<String>().toMutableSet()
-        if (!instances.contains(instance)) {
-            instances.add(instance)
+    internal fun tryGetToken(instance: String): String? {
+        return synchronized(tokenLock) {
+            preferences.getString("$instance/$PREF_MASTER_TOKEN", null)
         }
-        preferences.edit().putStringSet(PREF_MASTER_INSTANCE, instances).apply()
-        preferences.edit().putString("$instance/$PREF_MASTER_TOKEN", token).apply()
     }
 
-    internal fun getToken(instance: String): String? {
-        return preferences.getString("$instance/$PREF_MASTER_TOKEN", null)
+    @SuppressLint("MutatingSharedPrefs", "ApplySharedPref")
+    internal fun getTokenOrNew(instance: String): String {
+        return synchronized(tokenLock) {
+            preferences.getString("$instance/$PREF_MASTER_TOKEN", null) ?: run {
+                val token = UUID.randomUUID().toString()
+                synchronized(instancesLock) {
+                    val instances = preferences.getStringSet(PREF_MASTER_INSTANCE, null)
+                        ?: emptySet<String>().toMutableSet()
+                    if (!instances.contains(instance)) {
+                        instances.add(instance)
+                    }
+                    preferences.edit().putStringSet(PREF_MASTER_INSTANCE, instances).commit()
+                }
+                preferences.edit().putString("$instance/$PREF_MASTER_TOKEN", token).commit()
+                token
+            }
+        }
     }
 
-    internal fun getInstance(token: String): String? {
+    internal fun tryGetInstance(token: String): String? {
         getInstances().forEach {
-            if (getToken(it).equals(token)) {
+            if (tryGetToken(it).equals(token)) {
                 return it
             }
         }
@@ -42,36 +46,50 @@ internal class Store (context: Context) {
     }
 
     internal fun getInstances(): Set<String> {
-        return preferences.getStringSet(PREF_MASTER_INSTANCE, null)
-            ?: emptySet()
+        return synchronized(instancesLock) {
+            preferences.getStringSet(PREF_MASTER_INSTANCE, null)
+                ?: emptySet()
+        }
     }
 
-    @SuppressLint("MutatingSharedPrefs")
+    @SuppressLint("MutatingSharedPrefs", "ApplySharedPref")
     internal fun removeInstance(instance: String, removeDistributor: Boolean = false) {
-        val instances = preferences.getStringSet(PREF_MASTER_INSTANCE, null)
-            ?: emptySet<String>().toMutableSet()
-        instances.remove(instance)
-        preferences.edit().putStringSet(PREF_MASTER_INSTANCE, instances).apply()
-        preferences.edit().remove("$instance/$PREF_MASTER_TOKEN").apply()
-        if (removeDistributor && instances.isEmpty()) {
-            removeDistributor()
+        synchronized(instancesLock) {
+            val instances = preferences.getStringSet(PREF_MASTER_INSTANCE, null)
+                ?: emptySet<String>().toMutableSet()
+            instances.remove(instance)
+            preferences.edit().putStringSet(PREF_MASTER_INSTANCE, instances).commit()
+            synchronized(tokenLock) {
+                preferences.edit().remove("$instance/$PREF_MASTER_TOKEN").commit()
+            }
+            if (removeDistributor && instances.isEmpty()) {
+                removeDistributor()
+            }
         }
     }
 
     internal fun removeInstances() {
-        preferences.edit().remove(PREF_MASTER_INSTANCE).apply()
+        synchronized(instancesLock) {
+            preferences.edit().remove(PREF_MASTER_INSTANCE).commit()
+        }
     }
 
     internal fun saveDistributor(distributor: String) {
-        preferences.edit().putString(PREF_MASTER_DISTRIBUTOR, distributor).apply()
+        synchronized(distributorLock) {
+            preferences.edit().putString(PREF_MASTER_DISTRIBUTOR, distributor).commit()
+        }
     }
 
-    internal fun getDistributor(): String? {
-        return preferences.getString(PREF_MASTER_DISTRIBUTOR, null)
+    internal fun tryGetDistributor(): String? {
+        return synchronized(distributorLock) {
+            preferences.getString(PREF_MASTER_DISTRIBUTOR, null)
+        }
     }
 
     internal fun removeDistributor() {
-        preferences.edit().remove(PREF_MASTER_DISTRIBUTOR).apply()
+        synchronized(distributorLock) {
+            preferences.edit().remove(PREF_MASTER_DISTRIBUTOR).commit()
+        }
     }
 
     internal fun saveNoDistributorAck() {
@@ -87,6 +105,9 @@ internal class Store (context: Context) {
     }
 
     companion object {
+        private val tokenLock = Object()
+        private val instancesLock = Object()
+        private val distributorLock = Object()
         private lateinit var preferences: SharedPreferences
     }
 }
