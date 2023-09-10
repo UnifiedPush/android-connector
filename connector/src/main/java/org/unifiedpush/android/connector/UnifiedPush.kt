@@ -17,10 +17,11 @@ object UnifiedPush {
     const val FEATURE_BYTES_MESSAGE = "org.unifiedpush.android.distributor.feature.BYTES_MESSAGE"
 
     @JvmStatic
-    fun registerApp(context: Context,
-                    instance: String = INSTANCE_DEFAULT,
-                    features: ArrayList<String> = ArrayList(),
-                    messageForDistributor: String = ""
+    fun registerApp(
+        context: Context,
+        instance: String = INSTANCE_DEFAULT,
+        features: ArrayList<String> = ArrayList(),
+        messageForDistributor: String = ""
     ) {
         val store = Store(context)
         val token = store.getTokenOrNew(instance)
@@ -38,30 +39,35 @@ object UnifiedPush {
     }
 
     @JvmStatic
-    @Deprecated("Replace with registerAppWithDialog(" +
+    @Deprecated(
+        "Replace with registerAppWithDialog(" +
             "Context, String, RegistrationDialogContent, ArrayList<String>, String" +
-            ")")
-    fun registerAppWithDialog(context: Context,
-                              instance: String = INSTANCE_DEFAULT,
-                              dialogMessage: String,
-                              features: ArrayList<String> = ArrayList(),
-                              messageForDistributor: String = ""
+            ")"
+    )
+    fun registerAppWithDialog(
+        context: Context,
+        instance: String = INSTANCE_DEFAULT,
+        dialogMessage: String,
+        features: ArrayList<String> = ArrayList(),
+        messageForDistributor: String = ""
     ) {
         registerAppWithDialog(
             context,
             instance,
             RegistrationDialogContent().apply { noDistributorDialog.message = dialogMessage },
             features,
-            messageForDistributor)
+            messageForDistributor
+        )
     }
 
     @JvmStatic
-    fun registerAppWithDialog(context: Context,
-                              instance: String = INSTANCE_DEFAULT,
-                              registrationDialogContent: RegistrationDialogContent
-                              = RegistrationDialogContent(),
-                              features: ArrayList<String> = ArrayList(),
-                              messageForDistributor: String = ""
+    fun registerAppWithDialog(
+        context: Context,
+        instance: String = INSTANCE_DEFAULT,
+        registrationDialogContent: RegistrationDialogContent =
+            RegistrationDialogContent(),
+        features: ArrayList<String> = ArrayList(),
+        messageForDistributor: String = ""
     ) {
         if (getDistributor(context).isNotEmpty()) {
             registerApp(context, instance)
@@ -70,7 +76,7 @@ object UnifiedPush {
 
         val distributors = getDistributors(context, features)
 
-        when(distributors.size) {
+        when (distributors.size) {
             0 -> {
                 if (!Store(context).getNoDistributorAck()) {
                     val message = TextView(context)
@@ -86,7 +92,8 @@ object UnifiedPush {
                             _, _ ->
                     }
                     builder.setNegativeButton(registrationDialogContent.noDistributorDialog.ignoreButton) {
-                            _, _ -> Store(context).saveNoDistributorAck()
+                            _, _ ->
+                        Store(context).saveNoDistributorAck()
                     }
                     builder.show()
                 } else {
@@ -97,7 +104,7 @@ object UnifiedPush {
                 saveDistributor(context, distributors.first())
                 registerApp(context, instance, features, messageForDistributor)
             }
-            else ->{
+            else -> {
                 val builder: AlertDialog.Builder = AlertDialog.Builder(context)
                 builder.setTitle(registrationDialogContent.chooseDialog.title)
 
@@ -105,9 +112,10 @@ object UnifiedPush {
                 val distributorsNameArray = distributorsArray.map {
                     try {
                         val ai = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            context.packageManager.getApplicationInfo(it,
+                            context.packageManager.getApplicationInfo(
+                                it,
                                 PackageManager.ApplicationInfoFlags.of(
-                                PackageManager.GET_META_DATA.toLong()
+                                    PackageManager.GET_META_DATA.toLong()
                                 )
                             )
                         } else {
@@ -149,45 +157,49 @@ object UnifiedPush {
     }
 
     @JvmStatic
-    fun getDistributors(context: Context,
-                        features: ArrayList<String> = ArrayList()
+    fun getDistributors(
+        context: Context,
+        features: ArrayList<String> = ArrayList()
     ): List<String> {
         return (
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    context.packageManager.queryBroadcastReceivers(
-                        Intent(ACTION_REGISTER),
-                        PackageManager.ResolveInfoFlags.of(
-                            PackageManager.GET_META_DATA.toLong()
-                                + PackageManager.GET_RESOLVED_FILTER.toLong()
-                        )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.queryBroadcastReceivers(
+                    Intent(ACTION_REGISTER),
+                    PackageManager.ResolveInfoFlags.of(
+                        PackageManager.GET_META_DATA.toLong() +
+                            PackageManager.GET_RESOLVED_FILTER.toLong()
                     )
-                } else {
-                    context.packageManager.queryBroadcastReceivers(
-                        Intent(ACTION_REGISTER),
-                        PackageManager.GET_RESOLVED_FILTER
-                    )
-                }
-                ).mapNotNull {
-                val packageName = it.activityInfo.packageName
+                )
+            } else {
+                context.packageManager.queryBroadcastReceivers(
+                    Intent(ACTION_REGISTER),
+                    PackageManager.GET_RESOLVED_FILTER
+                )
+            }
+            ).mapNotNull {
+            val packageName = it.activityInfo.packageName
 
-                features.forEach { feature ->
-                    it.filter?.let { filter ->
-                        if (!filter.hasAction(feature)){
-                            Log.i(LOG_TAG, "Found distributor $packageName" +
-                                    " without feature $feature")
-                            return@mapNotNull null
-                        }
-                    } ?: run {
-                        Log.w(LOG_TAG, "Cannot filter distributors with features")
+            features.forEach { feature ->
+                it.filter?.let { filter ->
+                    if (!filter.hasAction(feature)) {
+                        Log.i(
+                            LOG_TAG,
+                            "Found distributor $packageName" +
+                                " without feature $feature"
+                        )
+                        return@mapNotNull null
                     }
+                } ?: run {
+                    Log.w(LOG_TAG, "Cannot filter distributors with features")
                 }
-                if (it.activityInfo.exported || packageName == context.packageName) {
-                    Log.d(LOG_TAG, "Found distributor with package name $packageName")
-                    packageName
-                } else {
-                    null
-                }
-                }
+            }
+            if (it.activityInfo.exported || packageName == context.packageName) {
+                Log.d(LOG_TAG, "Found distributor with package name $packageName")
+                packageName
+            } else {
+                null
+            }
+        }
     }
 
     @JvmStatic
@@ -200,7 +212,7 @@ object UnifiedPush {
         val store = Store(context)
         store.tryGetDistributor()?.let { distributor ->
             if (distributor in getDistributors(context)) {
-                Log.d(LOG_TAG,"Found saved distributor.")
+                Log.d(LOG_TAG, "Found saved distributor.")
                 return distributor
             }
         }

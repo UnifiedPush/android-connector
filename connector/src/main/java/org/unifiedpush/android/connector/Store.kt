@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import java.util.UUID
 
-internal class Store (context: Context) {
+internal class Store(context: Context) {
 
     init {
         preferences = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
