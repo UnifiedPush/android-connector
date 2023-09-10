@@ -62,7 +62,7 @@ afterEvaluate {
                 // You can then customize attributes of the publication as shown below.
                 groupId = 'org.unifiedpush.android'
                 artifactId = 'connector'
-                version = '2.1.1'
+                version = '2.2.0'
             }
         }
     }
