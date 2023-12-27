@@ -27,7 +27,7 @@ object UnifiedPush {
         val store = Store(context)
         val token = store.getTokenOrNew(instance)
 
-        val distributor = store.tryGetDistributor() ?: return
+        val distributor = getSavedDistributor(context) ?: return
 
         val broadcastIntent = Intent()
         broadcastIntent.`package` = distributor
@@ -70,7 +70,7 @@ object UnifiedPush {
         features: ArrayList<String> = DEFAULT_FEATURES,
         messageForDistributor: String = ""
     ) {
-        if (getDistributor(context).isNotEmpty()) {
+        getAckDistributor(context)?.let {
             registerApp(context, instance)
             return
         }
@@ -147,7 +147,11 @@ object UnifiedPush {
     @JvmStatic
     fun unregisterApp(context: Context, instance: String = INSTANCE_DEFAULT) {
         val store = Store(context)
-        val distributor = store.tryGetDistributor() ?: return
+        val distributor = getSavedDistributor(context) ?: run {
+            store.removeInstances()
+            store.removeDistributor()
+            return
+        }
         val token = store.tryGetToken(instance) ?: return
         val broadcastIntent = Intent()
         broadcastIntent.`package` = distributor
@@ -209,15 +213,40 @@ object UnifiedPush {
     }
 
     @JvmStatic
-    fun getDistributor(context: Context): String {
+    @Deprecated(
+        "Replace with getSavedDistributor or getAckDistributor",
+        replaceWith = ReplaceWith("getAckDistributor(context)")
+    )
+    fun getDistributor(context: Context): String  = getAckDistributor(context) ?: ""
+
+    /**
+     * This function returns the distributor registered by the user,
+     * but the distributor may not have sent a new endpoint yet
+     */
+    @JvmStatic
+    fun getSavedDistributor(context: Context): String? = getDistributor(context, false)
+
+    /**
+     * This function returns the distributor registered by the user,
+     * and the distributor has already sent a new endpoint
+     */
+    @JvmStatic
+    fun getAckDistributor(context: Context): String? = getDistributor(context, true)
+
+    @JvmStatic
+    private fun getDistributor(context: Context, ack: Boolean): String? {
         val store = Store(context)
-        store.tryGetDistributor()?.let { distributor ->
+        if (ack && !store.distributorAck) {
+            return null
+        }
+        return store.tryGetDistributor()?.let { distributor ->
             if (distributor in getDistributors(context)) {
                 Log.d(LOG_TAG, "Found saved distributor.")
-                return distributor
+                distributor
+            } else {
+                null
             }
         }
-        return ""
     }
 
     @JvmStatic

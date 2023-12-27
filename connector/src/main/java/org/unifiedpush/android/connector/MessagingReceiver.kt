@@ -27,6 +27,7 @@ open class MessagingReceiver : BroadcastReceiver() {
         when (intent.action) {
             ACTION_NEW_ENDPOINT -> {
                 val endpoint = intent.getStringExtra(EXTRA_ENDPOINT) ?: return
+                store.distributorAck = true
                 onNewEndpoint(context, endpoint, instance)
             }
             // keep REFUSED for old distributors supporting AND_1

@@ -88,9 +88,22 @@ internal class Store(context: Context) {
 
     internal fun removeDistributor() {
         synchronized(distributorLock) {
-            preferences.edit().remove(PREF_MASTER_DISTRIBUTOR).commit()
+            preferences.edit().apply {
+                remove(PREF_MASTER_DISTRIBUTOR)
+                remove(PREF_MASTER_DISTRIBUTOR_ACK)
+            }.commit()
         }
     }
+
+    internal var distributorAck: Boolean
+        get() = synchronized(distributorLock) {
+            preferences.getBoolean(PREF_MASTER_DISTRIBUTOR_ACK, false)
+        }
+        @SuppressLint("ApplySharedPref")
+        set(value) = synchronized(distributorLock) {
+            preferences.edit().putBoolean(PREF_MASTER_DISTRIBUTOR_ACK, value).commit()
+        }
+
 
     internal fun saveNoDistributorAck() {
         preferences.edit().putBoolean(PREF_MASTER_NO_DISTRIB_DIALOG_ACK, true).apply()
