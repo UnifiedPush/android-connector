@@ -15,12 +15,13 @@ import kotlin.collections.ArrayList
 object UnifiedPush {
 
     const val FEATURE_BYTES_MESSAGE = "org.unifiedpush.android.distributor.feature.BYTES_MESSAGE"
+    val DEFAULT_FEATURES = arrayListOf(FEATURE_BYTES_MESSAGE)
 
     @JvmStatic
     fun registerApp(
         context: Context,
         instance: String = INSTANCE_DEFAULT,
-        features: ArrayList<String> = ArrayList(),
+        features: ArrayList<String> = DEFAULT_FEATURES,
         messageForDistributor: String = ""
     ) {
         val store = Store(context)
@@ -48,7 +49,7 @@ object UnifiedPush {
         context: Context,
         instance: String = INSTANCE_DEFAULT,
         dialogMessage: String,
-        features: ArrayList<String> = ArrayList(),
+        features: ArrayList<String> = DEFAULT_FEATURES,
         messageForDistributor: String = ""
     ) {
         registerAppWithDialog(
@@ -66,7 +67,7 @@ object UnifiedPush {
         instance: String = INSTANCE_DEFAULT,
         registrationDialogContent: RegistrationDialogContent =
             RegistrationDialogContent(),
-        features: ArrayList<String> = ArrayList(),
+        features: ArrayList<String> = DEFAULT_FEATURES,
         messageForDistributor: String = ""
     ) {
         if (getDistributor(context).isNotEmpty()) {
@@ -159,7 +160,7 @@ object UnifiedPush {
     @JvmStatic
     fun getDistributors(
         context: Context,
-        features: ArrayList<String> = ArrayList()
+        features: ArrayList<String> = DEFAULT_FEATURES
     ): List<String> {
         return (
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
