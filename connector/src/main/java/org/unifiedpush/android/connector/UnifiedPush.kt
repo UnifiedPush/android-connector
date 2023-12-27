@@ -15,6 +15,7 @@ import kotlin.collections.ArrayList
 object UnifiedPush {
 
     const val FEATURE_BYTES_MESSAGE = "org.unifiedpush.android.distributor.feature.BYTES_MESSAGE"
+    @JvmStatic
     val DEFAULT_FEATURES = arrayListOf(FEATURE_BYTES_MESSAGE)
 
     @JvmStatic
