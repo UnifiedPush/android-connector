@@ -41,9 +41,10 @@ object UnifiedPush {
 
     @JvmStatic
     @Deprecated(
-        "Replace with registerAppWithDialog(" +
-            "Context, String, RegistrationDialogContent, ArrayList<String>, String" +
-            ")"
+        "Replace with registerAppWithDialog",
+        replaceWith = ReplaceWith("registerAppWithDialog(" +
+            "context, instance, RegistrationDialogContent().apply { noDistributorDialog.message = dialogMessage }, features, messageForDistributor" +
+                    ")")
     )
     fun registerAppWithDialog(
         context: Context,
