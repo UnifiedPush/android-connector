@@ -26,7 +26,7 @@ open class MessagingReceiver : BroadcastReceiver() {
         }
         when (intent.action) {
             ACTION_NEW_ENDPOINT -> {
-                val endpoint = intent.getStringExtra(EXTRA_ENDPOINT)!!
+                val endpoint = intent.getStringExtra(EXTRA_ENDPOINT) ?: return
                 onNewEndpoint(context, endpoint, instance)
             }
             // keep REFUSED for old distributors supporting AND_1
@@ -43,7 +43,7 @@ open class MessagingReceiver : BroadcastReceiver() {
             ACTION_MESSAGE -> {
                 // keep EXTRA_MESSAGEv1 for AND_1
                 val message = intent.getByteArrayExtra(EXTRA_BYTES_MESSAGE)
-                    ?: intent.getStringExtra(EXTRA_MESSAGE)!!.toByteArray()
+                    ?: intent.getStringExtra(EXTRA_MESSAGE)?.toByteArray() ?: return
                 val id = intent.getStringExtra(EXTRA_MESSAGE_ID) ?: ""
                 onMessage(context, message, instance)
                 store.tryGetDistributor()?.let {
