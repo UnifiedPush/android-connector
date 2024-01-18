@@ -186,6 +186,12 @@ object UnifiedPush {
         ).mapNotNull {
             val packageName = it.activityInfo.packageName
 
+            if (packageName == context.packageName &&
+                hasEmbeddedFcmDistributor(context) &&
+                !isPlayServicesAvailable(context) ) {
+                return@mapNotNull null
+            }
+
             features.forEach { feature ->
                 it.filter?.let { filter ->
                     if (!filter.hasAction(feature)) {
@@ -249,6 +255,28 @@ object UnifiedPush {
                 null
             }
         }
+    }
+
+    @JvmStatic
+    private fun hasEmbeddedFcmDistributor(context: Context): Boolean {
+        val packageInfo = context.packageManager.getPackageInfo(context.packageName, PackageManager.GET_SERVICES + PackageManager.GET_RECEIVERS)
+        return packageInfo.services?.map { it.name }
+            ?.contains("org.unifiedpush.android.embedded_fcm_distributor.fcm.FirebaseForwardingService") == true ||
+                packageInfo.receivers?.map { it.name }
+                    ?.contains("org.unifiedpush.android.foss_embedded_fcm_distributor.fcm.FirebaseReceiver") == true
+    }
+
+    @JvmStatic
+    private fun isPlayServicesAvailable(context: Context): Boolean {
+        val pm = context.packageManager
+        try {
+            pm.getPackageInfo("com.google.android.gms", PackageManager.GET_ACTIVITIES)
+            return true
+
+        } catch (e: PackageManager.NameNotFoundException) {
+            Log.v(LOG_TAG, e.message!!)
+        }
+        return false
     }
 
     @JvmStatic
