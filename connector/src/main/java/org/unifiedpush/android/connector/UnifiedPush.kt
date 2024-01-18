@@ -183,7 +183,7 @@ object UnifiedPush {
                     PackageManager.GET_RESOLVED_FILTER
                 )
             }
-            ).mapNotNull {
+        ).mapNotNull {
             val packageName = it.activityInfo.packageName
 
             features.forEach { feature ->
@@ -192,7 +192,7 @@ object UnifiedPush {
                         Log.i(
                             LOG_TAG,
                             "Found distributor $packageName" +
-                                " without feature $feature"
+                                    " without feature $feature"
                         )
                         return@mapNotNull null
                     }
