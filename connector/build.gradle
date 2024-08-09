@@ -7,7 +7,7 @@ plugins {
 }
 
 kotlin {
-    jvmToolchain(8)
+    jvmToolchain(17)
 }
 
 android {
@@ -39,10 +39,6 @@ android {
     }
 
     namespace "org.unifiedpush.android.connector"
-}
-
-dependencies {
-    api("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
 }
 
 // jitpack build
