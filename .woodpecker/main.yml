@@ -1,0 +1,23 @@
+steps:
+    check:
+        image: runmymind/docker-android-sdk:latest
+        when:
+          branch: main
+          event: [push, pull_request, manual]
+        commands:
+          - git clone https://codeberg.org/UnifiedPush/android-example example
+          - sed -i -e '/delToDevMain/d' -e 's-//toDevMain//--' example/app/build.gradle example/settings.gradle
+          - ./example/gradlew assembleMainFlavor --stacktrace
+          - mv example/app/build/outputs/apk/mainFlavor/debug/app-mainFlavor-debug.apk UP-Example-main.apk
+
+    upload:
+        image: codeberg.org/s1m/woodpecker-upload:latest
+        when:
+            branch: main
+            event: [push, pull_request, manual]
+        settings:
+            token:
+                from_secret: codeberg_token
+            file:
+                - UP-Example-main.apk
+            package: true
