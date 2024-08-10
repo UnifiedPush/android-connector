@@ -13,7 +13,7 @@ kotlin {
 android {
     compileSdk 34
     defaultConfig {
-        minSdk 16
+        minSdk 21
         targetSdk 34
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -39,6 +39,10 @@ android {
     }
 
     namespace "org.unifiedpush.android.connector"
+}
+
+dependencies {
+    implementation("androidx.appcompat:appcompat:1.7.0").because("Version appropriate AlertDialog styling")
 }
 
 // jitpack build

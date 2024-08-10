@@ -1,6 +1,5 @@
 package org.unifiedpush.android.connector
 
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -10,7 +9,7 @@ import android.text.method.LinkMovementMethod
 import android.text.util.Linkify
 import android.util.Log
 import android.widget.TextView
-import kotlin.collections.ArrayList
+import androidx.appcompat.app.AlertDialog
 
 object UnifiedPush {
 
