@@ -72,7 +72,10 @@ object UnifiedPush {
         features: ArrayList<String> = DEFAULT_FEATURES,
         messageForDistributor: String = ""
     ) {
-        getAckDistributor(context)?.let {
+        val distributors = getDistributors(context, features)
+        val ackDistributor = getAckDistributor(context)
+
+        if (ackDistributor != null && distributors.contains(ackDistributor)) {
             registerApp(context, instance)
             return
         }
