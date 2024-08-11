@@ -75,15 +75,12 @@ object UnifiedPush {
         messageForDistributor: String = ""
     ) {
         val distributors = getDistributors(context, features)
-        val ackDistributor = getAckDistributor(context)
-
-        if (ackDistributor != null && distributors.contains(ackDistributor)) {
-            registerApp(context, instance)
-            return
+        getAckDistributor(context)?.let {
+            if (distributors.contains(it)) {
+                registerApp(context, instance)
+                return
+            }
         }
-
-        val distributors = getDistributors(context, features)
-
         when (distributors.size) {
             0 -> {
                 if (!Store(context).getNoDistributorAck()) {
