@@ -1,2 +1,2 @@
 include ':connector'
-rootProject.name = "UnifiedPush Connector"
+rootProject.name = "android-connector"
