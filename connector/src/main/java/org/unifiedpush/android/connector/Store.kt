@@ -20,16 +20,18 @@ internal class Store(context: Context) {
     @SuppressLint("MutatingSharedPrefs", "ApplySharedPref")
     internal fun getTokenOrNew(instance: String): String {
         return synchronized(tokenLock) {
-            preferences.getString("$instance/$PREF_MASTER_TOKEN", null) ?: run {
-                val token = UUID.randomUUID().toString()
-                synchronized(instancesLock) {
-                    val instances = preferences.getStringSet(PREF_MASTER_INSTANCE, null)
-                        ?: emptySet<String>().toMutableSet()
-                    if (!instances.contains(instance)) {
-                        instances.add(instance)
-                    }
-                    preferences.edit().putStringSet(PREF_MASTER_INSTANCE, instances).commit()
+            var savedToken = preferences.getString("$instance/$PREF_MASTER_TOKEN", null)
+            synchronized(instancesLock) {
+                val instances = preferences.getStringSet(PREF_MASTER_INSTANCE, null)
+                    ?: emptySet<String>().toMutableSet()
+                if (!instances.contains(instance)) {
+                    instances.add(instance)
+                    savedToken = null
                 }
+                preferences.edit().putStringSet(PREF_MASTER_INSTANCE, instances).commit()
+            }
+            savedToken ?: run {
+                val token = UUID.randomUUID().toString()
                 preferences.edit().putString("$instance/$PREF_MASTER_TOKEN", token).commit()
                 token
             }
