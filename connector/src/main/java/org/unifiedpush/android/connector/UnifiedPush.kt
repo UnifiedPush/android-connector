@@ -82,23 +82,24 @@ object UnifiedPush {
         when (distributors.size) {
             0 -> {
                 if (!Store(context).getNoDistributorAck()) {
-                    val message = TextView(context)
-                    val builder = AlertDialog.Builder(context)
-                    val s = SpannableString(registrationDialogContent.noDistributorDialog.message)
-                    Linkify.addLinks(s, Linkify.WEB_URLS)
-                    message.text = s
-                    message.movementMethod = LinkMovementMethod.getInstance()
-                    message.setPadding(32, 32, 32, 32)
-                    builder.setTitle(registrationDialogContent.noDistributorDialog.title)
-                    builder.setView(message)
-                    builder.setPositiveButton(registrationDialogContent.noDistributorDialog.okButton) {
-                            _, _ ->
+                    val builder = AlertDialog.Builder(context).apply {
+                        setTitle(registrationDialogContent.noDistributorDialog.title)
+                        val msg =
+                            SpannableString(registrationDialogContent.noDistributorDialog.message)
+                        Linkify.addLinks(msg, Linkify.WEB_URLS)
+                        setMessage(msg)
+                        setPositiveButton(registrationDialogContent.noDistributorDialog.okButton) { _, _ -> }
+                        setNegativeButton(registrationDialogContent.noDistributorDialog.ignoreButton) { _, _ ->
+                            Store(context).saveNoDistributorAck()
+                        }
                     }
-                    builder.setNegativeButton(registrationDialogContent.noDistributorDialog.ignoreButton) {
-                            _, _ ->
-                        Store(context).saveNoDistributorAck()
+                    val dialog = builder.create()
+                    dialog.setOnShowListener {
+                        dialog.findViewById<TextView>(android.R.id.message)?.let {
+                            it.movementMethod = LinkMovementMethod.getInstance()
+                        }
                     }
-                    builder.show()
+                    dialog.show()
                 } else {
                     Log.d(LOG_TAG, "User already know there isn't any distributor")
                 }
