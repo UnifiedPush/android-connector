@@ -6,12 +6,20 @@ plugins {
     id 'maven-publish'
 }
 
-kotlin {
-    jvmToolchain(17)
-}
-
 android {
     compileSdk 34
+
+    compileOptions{
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+        // languageVersion provides source compatibility with the specified version of Kotlin
+        languageVersion = '1.7'
+    }
+
     defaultConfig {
         minSdk 21
         targetSdk 34
