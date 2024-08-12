@@ -253,9 +253,25 @@ object UnifiedPush {
                 Log.d(LOG_TAG, "Found saved distributor.")
                 distributor
             } else {
+                Log.d(LOG_TAG, "There was a distributor, but it isn't installed anymore")
+                store.getInstances().forEach {
+                    broadcastLocalUnregistered(context, it)
+                }
                 null
             }
         }
+    }
+
+    @JvmStatic
+    private fun broadcastLocalUnregistered(context: Context, instance: String) {
+        val store = Store(context)
+        val token = store.tryGetToken(instance) ?: return
+        val broadcastIntent = Intent()
+        broadcastIntent.`package` = context.packageName
+        broadcastIntent.action = ACTION_UNREGISTERED
+        broadcastIntent.putExtra(EXTRA_TOKEN, token)
+        store.removeInstance(instance, removeDistributor = true)
+        context.sendBroadcast(broadcastIntent)
     }
 
     @JvmStatic
