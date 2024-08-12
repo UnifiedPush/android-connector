@@ -49,10 +49,6 @@ android {
     namespace "org.unifiedpush.android.connector"
 }
 
-dependencies {
-    api("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
-}
-
 // jitpack build
 afterEvaluate {
     publishing {

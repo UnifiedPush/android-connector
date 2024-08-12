@@ -57,7 +57,9 @@ object UnifiedPush {
         registerAppWithDialog(
             context,
             instance,
-            RegistrationDialogContent().apply { noDistributorDialog.message = dialogMessage },
+            DefaultRegistrationDialogContent(context).apply {
+                noDistributorDialog.message = dialogMessage
+            },
             features,
             messageForDistributor
         )
@@ -68,7 +70,7 @@ object UnifiedPush {
         context: Context,
         instance: String = INSTANCE_DEFAULT,
         registrationDialogContent: RegistrationDialogContent =
-            RegistrationDialogContent(),
+            DefaultRegistrationDialogContent(context),
         features: ArrayList<String> = DEFAULT_FEATURES,
         messageForDistributor: String = ""
     ) {
