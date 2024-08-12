@@ -252,7 +252,7 @@ object UnifiedPush {
                 distributor
             } else {
                 Log.d(LOG_TAG, "There was a distributor, but it isn't installed anymore")
-                store.getInstances().forEach {
+                store.forEachInstance {
                     broadcastLocalUnregistered(context, it)
                 }
                 null
@@ -297,7 +297,7 @@ object UnifiedPush {
     @JvmStatic
     fun safeRemoveDistributor(context: Context) {
         val store = Store(context)
-        if (store.getInstances().isEmpty()) {
+        if (!store.isAnyInstance()) {
             store.removeDistributor()
         }
     }
@@ -305,9 +305,6 @@ object UnifiedPush {
     @JvmStatic
     fun forceRemoveDistributor(context: Context) {
         val store = Store(context)
-        store.getInstances().forEach {
-            store.removeInstance(it)
-        }
         store.removeInstances()
         store.removeDistributor()
     }

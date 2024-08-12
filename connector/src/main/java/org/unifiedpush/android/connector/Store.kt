@@ -39,18 +39,27 @@ internal class Store(context: Context) {
     }
 
     internal fun tryGetInstance(token: String): String? {
-        getInstances().forEach {
-            if (tryGetToken(it).equals(token)) {
-                return it
+        synchronized(instancesLock) {
+            preferences.getStringSet(PREF_MASTER_INSTANCE, null)?.forEach {
+                if (tryGetToken(it).equals(token)) {
+                    return it
+                }
             }
         }
         return null
     }
 
-    internal fun getInstances(): Set<String> {
+    internal fun forEachInstance(block: (instance: String) -> Unit) {
+        synchronized(instancesLock) {
+            preferences.getStringSet(PREF_MASTER_INSTANCE, null)?.forEach {
+                block(it)
+            }
+        }
+    }
+
+    internal fun isAnyInstance(): Boolean {
         return synchronized(instancesLock) {
-            preferences.getStringSet(PREF_MASTER_INSTANCE, null)
-                ?: emptySet()
+            preferences.getStringSet(PREF_MASTER_INSTANCE, null) != null
         }
     }
 
@@ -72,6 +81,11 @@ internal class Store(context: Context) {
 
     internal fun removeInstances() {
         synchronized(instancesLock) {
+            preferences.getStringSet(PREF_MASTER_INSTANCE, null)?.forEach { instance ->
+                synchronized(tokenLock) {
+                    preferences.edit().remove("$instance/$PREF_MASTER_TOKEN").commit()
+                }
+            }
             preferences.edit().remove(PREF_MASTER_INSTANCE).commit()
         }
     }
