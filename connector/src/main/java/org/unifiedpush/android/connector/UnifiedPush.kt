@@ -72,13 +72,11 @@ object UnifiedPush {
         features: ArrayList<String> = DEFAULT_FEATURES,
         messageForDistributor: String = ""
     ) {
-        val distributors = getDistributors(context, features)
         getAckDistributor(context)?.let {
-            if (distributors.contains(it)) {
-                registerApp(context, instance)
-                return
-            }
+            registerApp(context, instance)
+            return
         }
+        val distributors = getDistributors(context, features)
         when (distributors.size) {
             0 -> {
                 if (!Store(context).getNoDistributorAck()) {
