@@ -1,6 +1,7 @@
 steps:
     check:
-        image: runmymind/docker-android-sdk:latest
+        # https://github.com/MobileDevOps/android-sdk-image
+        image: mobiledevops/android-sdk-image:latest
         when:
           branch: main
           event: [push, pull_request, manual]
