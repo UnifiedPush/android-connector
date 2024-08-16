@@ -1,6 +1,5 @@
 package org.unifiedpush.android.connector
 
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -10,7 +9,7 @@ import android.text.method.LinkMovementMethod
 import android.text.util.Linkify
 import android.util.Log
 import android.widget.TextView
-import kotlin.collections.ArrayList
+import androidx.appcompat.app.AlertDialog
 
 object UnifiedPush {
 
@@ -57,7 +56,9 @@ object UnifiedPush {
         registerAppWithDialog(
             context,
             instance,
-            RegistrationDialogContent().apply { noDistributorDialog.message = dialogMessage },
+            DefaultRegistrationDialogContent(context).apply {
+                noDistributorDialog.message = dialogMessage
+            },
             features,
             messageForDistributor
         )
@@ -68,7 +69,7 @@ object UnifiedPush {
         context: Context,
         instance: String = INSTANCE_DEFAULT,
         registrationDialogContent: RegistrationDialogContent =
-            RegistrationDialogContent(),
+            DefaultRegistrationDialogContent(context),
         features: ArrayList<String> = DEFAULT_FEATURES,
         messageForDistributor: String = ""
     ) {

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <string name="unified_push_dialog_no_distributor_title">No distributor found</string>
+    <string name="unified_push_dialog_no_distributor_message">You need to install a distributor for push notifications to work\n\nFor more information visit https://unifiedpush.org.</string>
+    <string name="unified_push_dialog_no_distributor_negative">Don\'t tell me again</string>
+
+    <string name="unified_push_dialog_choose_title">Choose a distributor</string>
+</resources>
