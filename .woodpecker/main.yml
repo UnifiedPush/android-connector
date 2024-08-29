@@ -6,7 +6,6 @@ steps:
           branch: main
           event: [push, pull_request, manual]
         commands:
-          - apt update && apt install -y openjdk-8-jdk
           - git clone https://codeberg.org/UnifiedPush/android-example example
           - cd ./example/
           - sed -i -e '/delToDevMain/d' -e 's-//toDevMain//--' app/build.gradle settings.gradle
