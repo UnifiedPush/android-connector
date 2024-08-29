@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 NORMAL=$'\e[0m'
 GREEN=$(tput setaf 2)
@@ -45,8 +45,8 @@ rm -rf ~/.m2/repository/${DIR:?}
 cd ~/.m2/repository/
 for file in ${DIR:?}/*; do
     echo "[+] Signing $file"
-    sha1sum $file > $file.sha1
-    md5sum $file > $file.md5
+    sha1sum $file | sed 's/ .*//' > $file.sha1
+    md5sum $file | sed 's/ .*//' > $file.md5
     gpg -ab $file
 done
 
