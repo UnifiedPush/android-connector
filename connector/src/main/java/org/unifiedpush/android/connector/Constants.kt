@@ -2,7 +2,7 @@ package org.unifiedpush.android.connector
 
 /**
  * Constants as defined on the specs
- * https://github.com/UnifiedPush/UP-spec/blob/main/specifications.md
+ * https://unifiedpush.org/developers/spec/android/
  */
 
 const val PREF_MASTER = "unifiedpush.connector"

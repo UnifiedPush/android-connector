@@ -50,7 +50,25 @@ android {
 }
 
 dependencies {
-    api("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+}
+
+def releaseGroupId = 'org.unifiedpush.android'
+def releaseArtifactId = 'connector'
+def releaseVersion = '2.4.0'
+
+tasks.register('printArtifactId') {
+    group 'Artifact Info'
+    doLast {
+        println("artifact=$releaseGroupId:$releaseArtifactId")
+    }
+}
+
+tasks.register("printVersion") {
+    group 'Artifact Info'
+    doLast {
+        println("version=$releaseVersion")
+    }
 }
 
 // jitpack build
@@ -63,9 +81,9 @@ afterEvaluate {
                 from components.release
 
                 // You can then customize attributes of the publication as shown below.
-                groupId = 'org.unifiedpush.android'
-                artifactId = 'connector'
-                version = '2.4.0'
+                groupId = releaseGroupId
+                artifactId = releaseArtifactId
+                version = releaseVersion
             }
         }
     }
