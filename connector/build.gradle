@@ -53,7 +53,7 @@ dependencies {
 
 def releaseGroupId = 'org.unifiedpush.android'
 def releaseArtifactId = 'connector'
-def releaseVersion = '2.4.0'
+def releaseVersion = '2.5.0'
 
 tasks.register('printArtifactId') {
     group 'Artifact Info'
