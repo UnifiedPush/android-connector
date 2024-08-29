@@ -42,10 +42,17 @@ object UnifiedPush {
 
     @JvmStatic
     @Deprecated(
-        "Replace with registerAppWithDialog",
-        replaceWith = ReplaceWith("registerAppWithDialog(" +
-            "context, instance, RegistrationDialogContent().apply { noDistributorDialog.message = dialogMessage }, features, messageForDistributor" +
-                    ")")
+        "Replace with org.unifiedpush.android:connector-ui SelectDistributorDialogBuilder",
+        replaceWith = ReplaceWith("SelectDistributorDialogBuilder(\n" +
+                "                context,\n" +
+                "                listOf(instance),\n" +
+                "                object : UnifiedPushFunctions {\n" +
+                "                    override fun getAckDistributor(): String? = UnifiedPush.getAckDistributor(context)\n" +
+                "                    override fun getDistributors(): List<String> = UnifiedPush.getDistributors(context, features)\n" +
+                "                    override fun registerApp(instance: String) = UnifiedPush.registerApp(context, instance, features, messageForDistributor)\n" +
+                "                    override fun saveDistributor(distributor: String) = UnifiedPush.saveDistributor(context, distributor)\n" +
+                "                },\n" +
+                "            ).show()")
     )
     fun registerAppWithDialog(
         context: Context,
@@ -64,6 +71,19 @@ object UnifiedPush {
     }
 
     @JvmStatic
+    @Deprecated(
+        "Replace with org.unifiedpush.android:connector-ui SelectDistributorDialogBuilder",
+        replaceWith = ReplaceWith("object : SelectDistributorDialogBuilder(\n" +
+                "                context,\n" +
+                "                listOf(instance),\n" +
+                "                object : UnifiedPushFunctions {\n" +
+                "                    override fun getAckDistributor(): String? = UnifiedPush.getAckDistributor(context)\n" +
+                "                    override fun getDistributors(): List<String> = UnifiedPush.getDistributors(context, features)\n" +
+                "                    override fun registerApp(instance: String) = UnifiedPush.registerApp(context, instance, features, messageForDistributor)\n" +
+                "                    override fun saveDistributor(distributor: String) = UnifiedPush.saveDistributor(context, distributor)\n" +
+                "                },\n" +
+                "            ).show()")
+    )
     fun registerAppWithDialog(
         context: Context,
         instance: String = INSTANCE_DEFAULT,
