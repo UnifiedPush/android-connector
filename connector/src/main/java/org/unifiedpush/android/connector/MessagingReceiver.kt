@@ -9,7 +9,7 @@ import android.util.Log
 open class MessagingReceiver : BroadcastReceiver() {
 
     open fun onNewEndpoint(context: Context, endpoint: String, instance: String) {}
-    open fun onRegistrationFailed(context: Context, instance: String) {}
+    open fun onRegistrationFailed(context: Context, reason: FailedReason, instance: String) {}
     open fun onUnregistered(context: Context, instance: String) {}
     open fun onMessage(context: Context, message: ByteArray, instance: String) {}
 
@@ -27,14 +27,17 @@ open class MessagingReceiver : BroadcastReceiver() {
         when (intent.action) {
             ACTION_NEW_ENDPOINT -> {
                 val endpoint = intent.getStringExtra(EXTRA_ENDPOINT) ?: return
+                val id = intent.getStringExtra(EXTRA_MESSAGE_ID)
                 store.distributorAck = true
                 onNewEndpoint(context, endpoint, instance)
+                store.tryGetDistributor()?.let {
+                    mayAcknowledgeMessage(context, it, id, token)
+                }
             }
-            // keep REFUSED for old distributors supporting AND_1
-            ACTION_REGISTRATION_FAILED, ACTION_REGISTRATION_REFUSED -> {
-                val message = intent.getStringExtra(EXTRA_MESSAGE) ?: "No reason supplied"
-                Log.i(LOG_TAG, "Failed: $message")
-                onRegistrationFailed(context, instance)
+            ACTION_REGISTRATION_FAILED -> {
+                val reason = intent.getStringExtra(EXTRA_REASON)
+                Log.i(LOG_TAG, "Failed: $reason")
+                onRegistrationFailed(context, reason.toFailedReason(), instance)
                 store.removeInstance(instance)
             }
             ACTION_UNREGISTERED -> {
@@ -42,13 +45,11 @@ open class MessagingReceiver : BroadcastReceiver() {
                 store.removeInstance(instance, removeDistributor = true)
             }
             ACTION_MESSAGE -> {
-                // keep EXTRA_MESSAGEv1 for AND_1
-                val message = intent.getByteArrayExtra(EXTRA_BYTES_MESSAGE)
-                    ?: intent.getStringExtra(EXTRA_MESSAGE)?.toByteArray() ?: return
-                val id = intent.getStringExtra(EXTRA_MESSAGE_ID) ?: ""
+                val message = intent.getByteArrayExtra(EXTRA_BYTES_MESSAGE) ?: return
+                val id = intent.getStringExtra(EXTRA_MESSAGE_ID)
                 onMessage(context, message, instance)
                 store.tryGetDistributor()?.let {
-                    acknowledgeMessage(context, it, id, token)
+                    mayAcknowledgeMessage(context, it, id, token)
                 }
             }
         }
@@ -59,17 +60,19 @@ open class MessagingReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun acknowledgeMessage(
+    private fun mayAcknowledgeMessage(
         context: Context,
         distributor: String,
-        id: String,
+        id: String?,
         token: String
     ) {
-        val broadcastIntent = Intent()
-        broadcastIntent.`package` = distributor
-        broadcastIntent.action = ACTION_MESSAGE_ACK
-        broadcastIntent.putExtra(EXTRA_TOKEN, token)
-        broadcastIntent.putExtra(EXTRA_MESSAGE_ID, id)
-        context.sendBroadcast(broadcastIntent)
+        id?.let {
+            val broadcastIntent = Intent()
+            broadcastIntent.`package` = distributor
+            broadcastIntent.action = ACTION_MESSAGE_ACK
+            broadcastIntent.putExtra(EXTRA_TOKEN, token)
+            broadcastIntent.putExtra(EXTRA_MESSAGE_ID, it)
+            context.sendBroadcast(broadcastIntent)
+        }
     }
 }
