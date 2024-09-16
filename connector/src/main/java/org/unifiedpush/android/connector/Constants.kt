@@ -6,13 +6,20 @@ package org.unifiedpush.android.connector
  */
 
 internal const val PREF_MASTER = "unifiedpush.connector"
-internal const val PREF_MASTER_TOKEN = "unifiedpush.connector"
 internal const val PREF_MASTER_TEMP_TOKEN = "unifiedpush.temp_token"
 internal const val PREF_MASTER_AUTH = "unifiedpush.auth"
-internal const val PREF_MASTER_INSTANCE = "unifiedpush.instances"
+internal const val PREF_MASTER_INSTANCES = "unifiedpush.instances"
 internal const val PREF_MASTER_DISTRIBUTOR = "unifiedpush.distributor"
 internal const val PREF_MASTER_DISTRIBUTOR_ACK = "unifiedpush.distributor_ack"
 internal const val PREF_MASTER_DISTRIBUTOR_AND2 = "unifiedpush.distributor_and_2"
+internal const val PREF_MASTER_EVENT_COUNT = "unifiedpush.event_count"
+internal const val PREF_MASTER_LAST_LINK = "unifiedpush.last_link"
+
+internal const val PREF_CONNECTOR_TOKEN = "%s/unifiedpush.connector"
+internal const val PREF_CONNECTOR_EVENT_COUNT = "%s/unifiedpush.event_count"
+internal const val PREF_CONNECTOR_VAPID = "%s/unifiedpush.vapid"
+internal const val PREF_CONNECTOR_MESSAGE = "%s/unifiedpush.message"
+internal const val PREF_CONNECTOR_ACK = "%s/unifiedpush.ack"
 
 const val ACTION_LINKED = "org.unifiedpush.android.connector.LINKED"
 const val ACTION_NEW_ENDPOINT = "org.unifiedpush.android.connector.NEW_ENDPOINT"

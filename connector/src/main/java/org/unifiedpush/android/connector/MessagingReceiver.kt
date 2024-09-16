@@ -22,11 +22,20 @@ open class MessagingReceiver : BroadcastReceiver() {
             && intent.getStringExtra(EXTRA_AUTH) == store.tempToken) {
             store.authToken = intent.getStringExtra(EXTRA_AUTH) ?: return
             store.distributorAck = true
-            // TODO send registration for all registrationQueue elements
+            // Every registration that hasn't been acknowledge has been sent before LINKED was received
+            store.registrationSet.forEachRegistration {
+                if (!it.ack) {
+                    UnifiedPush.registerApp(
+                        context,
+                        store,
+                        it
+                    )
+                }
+            }
             return
         }
         val instance = token?.let {
-            store.tryGetInstance(it)
+            store.registrationSet.tryGetInstance(it)
         } ?: return
         val wakeLock = (context.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
             newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG).apply {
@@ -38,6 +47,7 @@ open class MessagingReceiver : BroadcastReceiver() {
                 val endpoint = intent.getStringExtra(EXTRA_ENDPOINT) ?: return
                 val id = intent.getStringExtra(EXTRA_MESSAGE_ID)
                 store.distributorAck = true
+                store.registrationSet.ack(instance, true)
                 onNewEndpoint(context, endpoint, instance)
                 store.tryGetDistributor()?.let {
                     mayAcknowledgeMessage(context, it, id, token)
@@ -47,34 +57,46 @@ open class MessagingReceiver : BroadcastReceiver() {
                 val reason = intent.getStringExtra(EXTRA_REASON).toFailedReason()
                 Log.i(TAG, "Failed: $reason")
                 if (reason == FailedReason.UNAUTH) {
-                    // What if REGISTER was send before LINKED is receive, but LINKED
-                    // has been received since MESSAGE ?
-                    // -> REGISTER is never send if Ack = false, it sends LINK first
-                    // and add the registration to the queue
+                    // What if REGISTER was send after LINK is sent and before LINKED is received ?
+                    // -> REGISTER is never send if Ack = false. `registerApp` sends LINK first
+                    // and save the registration. Once LINKED is received, it sends the REGISTER
+                    // intent to the distributor.
                     // -> The only reason why we could receive an UNAUTH is
-                    // because we had Ack = true, but the distributor do not
-                    // know the token anymore (eg. data has been wiped)
-                    // -> but if there were many REGISTER intent, they were sent with Ack = true
-                    // but in reality this is Ack = false
+                    // because we had Ack = true, but the distributor did not
+                    // know the token anymore (eg. its data has been wiped)
+                    // -> but if there were many REGISTER intent, we had Ack = true, and we receive
+                    // UNAUTH, so in reality this is Ack = false
                     // => therefore, we NEED to know last LINK event and register event
-                    // It must be monolithically increased, we can use an event count
-                    // TODO, save add store.event_count
-                    // if (store.event_n(token)>store.last_link_event_n) {
-                    //     store.distributorAck = false
-                    //     // No need to check if the distributor is still here, we just receive
-                    //     // an intent with the right token
-                    //     val distributor = store.tryGetDistributor(context) ?: return
-                    //     broadcastLink(context, store, distributor)
-                    // }
-                    // TODO, add this registration to the registrationQueue if it exists
-                    // or send registerApp()
+                    // It must be monolithically increased, we use an event count
+                    store.registrationSet.ack(instance, false)
+                    if (store.registrationSet.getEventCount(instance) > store.lastLinkRequest) {
+                        // This registration request is more recent than the last LINK request,
+                        // the distributor has probably been reinstalled
+                        // we send a new LINK request
+                        store.distributorAck = false
+                        store.authToken = null
+                        store.tryGetDistributor()?.let { distributor ->
+                            UnifiedPush.broadcastLink(context, store, distributor)
+                        }
+                    } else if (store.distributorAck) {
+                        // We have received the new LINKED response, we can register directly
+                        store.registrationSet.tryGetRegistration(instance)?.let { reg ->
+                            store.tryGetDistributor()?.let {
+                                UnifiedPush.registerApp(context, store, reg)
+                            }
+                        }
+                    }
+                    // else, `registerApp` will be send during next LINKED
+                } else {
+                    store.registrationSet.removeInstance(instance)
                 }
                 onRegistrationFailed(context, reason, instance)
-                store.removeInstance(instance)
             }
             ACTION_UNREGISTERED -> {
                 onUnregistered(context, instance)
-                store.removeInstance(instance, removeDistributor = true)
+                store.registrationSet.removeInstance(instance).ifEmpty {
+                    store.removeDistributor()
+                }
             }
             ACTION_MESSAGE -> {
                 val message = intent.getByteArrayExtra(EXTRA_BYTES_MESSAGE) ?: return

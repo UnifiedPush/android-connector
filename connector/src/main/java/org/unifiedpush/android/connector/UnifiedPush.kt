@@ -11,16 +11,33 @@ object UnifiedPush {
 
     // For compatibility purpose with AND_2
     private const val FEATURE_BYTES_MESSAGE = "org.unifiedpush.android.distributor.feature.BYTES_MESSAGE"
-    internal var registrationQueue: MutableList<String>? = null
 
     @JvmStatic
     fun registerApp(
         context: Context,
         instance: String = INSTANCE_DEFAULT,
-        messageForDistributor: String = "",
+        messageForDistributor: String? = null,
         vapid: String? = null
     ) {
         val store = Store(context)
+        registerApp(
+            context,
+            store,
+            store.registrationSet.newOrUpdate(
+                instance,
+                messageForDistributor,
+                vapid,
+                store.getEventCountAndIncrement()
+            )
+        )
+    }
+
+    @JvmStatic
+    internal fun registerApp(
+        context: Context,
+        store: Store,
+        registration: Registration
+    ) {
 
         // TODO throw error if store.tryGetDistributor is null
         val distributor = store.tryGetDistributor() ?: return
@@ -33,17 +50,17 @@ object UnifiedPush {
                 store.legacyDistributor = false
                 store.distributorAck = false
                 broadcastLink(context, store, distributor)
-                registerAppv3(context, store, instance, messageForDistributor, vapid)
+                registerAppv3(context, store, registration)
             }
-            registerAppv2(context, store, instance, messageForDistributor)
+            registerAppv2(context, store, registration)
         } else {
-            registerAppv3(context, store, instance, messageForDistributor, vapid)
+            registerAppv3(context, store, registration)
         }
     }
 
     @JvmStatic
-    private fun registerAppv2(context: Context, store: Store, instance: String, messageForDistributor: String) {
-        val token = store.getTokenOrNew(instance)
+    private fun registerAppv2(context: Context, store: Store, registration: Registration) {
+
         // If it is empty, then the distributor has been uninstalled
         // getDistributor sends UNREGISTERED locally
         // TODO throw error if the distrib has been uninstalled
@@ -51,60 +68,64 @@ object UnifiedPush {
         val broadcastIntent = Intent().apply {
             `package` = distributor
             action = ACTION_REGISTER
-            putExtra(EXTRA_TOKEN, token)
+            putExtra(EXTRA_TOKEN, registration.token)
             // For compatibility with AND_2
             putExtra(EXTRA_FEATURES, arrayOf(FEATURE_BYTES_MESSAGE))
-            putExtra(EXTRA_MESSAGE_FOR_DISTRIB, messageForDistributor)
             putExtra(EXTRA_APPLICATION, context.packageName)
+            registration.messageForDistributor?.let {
+                putExtra(EXTRA_MESSAGE_FOR_DISTRIB, it)
+            }
         }
         context.sendBroadcast(broadcastIntent)
     }
 
     @JvmStatic
-    private fun registerAppv3(context: Context, store: Store, instance: String, messageForDistributor: String, vapid: String?) {
-        val token = store.getTokenOrNew(instance)
+    private fun registerAppv3(context: Context, store: Store, registration: Registration) {
+
         // Here we want to be sure the distributor is still installed
         // or we return => we use getDistributor and not the store directly
         // It doesn't have to be ack yet, because it is
 
-        // If the queue exists, there is a LINK request pending
-        registrationQueue?.let {
-            //TODO: add registration to the queue
-        } ?: run {
-            // The distributor MUST be ack now
-            // If it is empty, then the distributor has been uninstalled
-            // getDistributor sends UNREGISTERED locally
-            val auth = store.authToken
-            // TODO throw error if the distrib has been uninstalled
-            val distributor = getDistributor(context, store, true) ?: return
-            val broadcastIntent = Intent().apply {
-                `package` = distributor
-                action = ACTION_REGISTER
-                putExtra(EXTRA_TOKEN, token)
-                putExtra(EXTRA_MESSAGE_FOR_DISTRIB, messageForDistributor)
-                vapid?.let {
-                    putExtra(EXTRA_VAPID, it)
-                }
-                putExtra(EXTRA_AUTH, auth)
+        // If the distributor is uninstalled, getDistributor sends UNREGISTERED locally
+        // TODO throw error if the distrib has been uninstalled
+        val distributor = getDistributor(context, store, false) ?: return
+        // If the auth token is empty, it means the LINKED response hasn't been received yet
+        // The registration request is saved already, and the registration will be send when
+        // the LINKED is received.
+        val auth = store.authToken ?: return
+
+        val broadcastIntent = Intent().apply {
+            `package` = distributor
+            action = ACTION_REGISTER
+            putExtra(EXTRA_TOKEN, registration.token)
+            putExtra(EXTRA_AUTH, auth)
+            registration.messageForDistributor?.let {
+                putExtra(EXTRA_MESSAGE_FOR_DISTRIB, it)
             }
-            context.sendBroadcast(broadcastIntent)
+            registration.vapid?.let {
+                putExtra(EXTRA_VAPID, it)
+            }
         }
+        context.sendBroadcast(broadcastIntent)
     }
 
     @JvmStatic
     fun unregisterApp(context: Context, instance: String = INSTANCE_DEFAULT) {
         val store = Store(context)
         val distributor = getSavedDistributor(context) ?: run {
-            store.removeInstances()
+            store.registrationSet.removeInstances()
             store.removeDistributor()
             return
         }
-        val token = store.tryGetToken(instance) ?: return
+        val token = store.registrationSet.tryGetToken(instance) ?: return
         val broadcastIntent = Intent()
         broadcastIntent.`package` = distributor
         broadcastIntent.action = ACTION_UNREGISTER
         broadcastIntent.putExtra(EXTRA_TOKEN, token)
-        store.removeInstance(instance, removeDistributor = true)
+        store.registrationSet.removeInstance(instance).ifEmpty {
+            store.removeDistributor()
+        }
+        store.removeDistributor()
         context.sendBroadcast(broadcastIntent)
     }
 
@@ -208,7 +229,7 @@ object UnifiedPush {
                 distributor
             } else {
                 Log.d(TAG, "There was a distributor, but it isn't installed anymore")
-                store.forEachInstance {
+                store.registrationSet.forEachInstance {
                     broadcastLocalUnregistered(context, store, it)
                 }
                 null
@@ -218,9 +239,8 @@ object UnifiedPush {
 
     @JvmStatic
     internal fun broadcastLink(context: Context, store: Store, distributor: String) {
-        // TODO init registrationQueue
-        // TODO start job that remove registrationQueue if not LINKED in 3 seconds
         // It must send REGISTRATION_FAILED with ACTION_REQUIRED
+        store.lastLinkRequest = store.getEventCountAndIncrement()
         val tempToken = store.newTempToken()
         val broadcastIntent = Intent().apply {
             `package` = distributor
@@ -232,12 +252,14 @@ object UnifiedPush {
 
     @JvmStatic
     private fun broadcastLocalUnregistered(context: Context, store: Store, instance: String) {
-        val token = store.tryGetToken(instance) ?: return
+        val token = store.registrationSet.tryGetToken(instance) ?: return
         val broadcastIntent = Intent()
         broadcastIntent.`package` = context.packageName
         broadcastIntent.action = ACTION_UNREGISTERED
         broadcastIntent.putExtra(EXTRA_TOKEN, token)
-        store.removeInstance(instance, removeDistributor = true)
+        store.registrationSet.removeInstance(instance).ifEmpty {
+            store.removeDistributor()
+        }
         context.sendBroadcast(broadcastIntent)
     }
 
@@ -266,7 +288,7 @@ object UnifiedPush {
     @JvmStatic
     fun forceRemoveDistributor(context: Context) {
         val store = Store(context)
-        store.removeInstances()
+        store.registrationSet.removeInstances()
         store.removeDistributor()
     }
 }
