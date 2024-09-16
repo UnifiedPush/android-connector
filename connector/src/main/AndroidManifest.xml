@@ -5,6 +5,9 @@
 
     <queries>
         <intent>
+            <action android:name="org.unifiedpush.android.distributor.LINK" />
+        </intent>
+        <intent>
             <action android:name="org.unifiedpush.android.distributor.REGISTER" />
         </intent>
         <intent>

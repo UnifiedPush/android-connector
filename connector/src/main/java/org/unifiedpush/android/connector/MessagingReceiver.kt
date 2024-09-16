@@ -16,6 +16,15 @@ open class MessagingReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val token = intent.getStringExtra(EXTRA_TOKEN)
         val store = Store(context)
+        // For the linked request, we use a temporary token,
+        // which is different from connection tokens
+        if (intent.action == ACTION_LINKED
+            && intent.getStringExtra(EXTRA_AUTH) == store.tempToken) {
+            store.authToken = intent.getStringExtra(EXTRA_AUTH) ?: return
+            store.distributorAck = true
+            // TODO send registration for all registrationQueue elements
+            return
+        }
         val instance = token?.let {
             store.tryGetInstance(it)
         } ?: return
@@ -35,9 +44,32 @@ open class MessagingReceiver : BroadcastReceiver() {
                 }
             }
             ACTION_REGISTRATION_FAILED -> {
-                val reason = intent.getStringExtra(EXTRA_REASON)
-                Log.i(LOG_TAG, "Failed: $reason")
-                onRegistrationFailed(context, reason.toFailedReason(), instance)
+                val reason = intent.getStringExtra(EXTRA_REASON).toFailedReason()
+                Log.i(TAG, "Failed: $reason")
+                if (reason == FailedReason.UNAUTH) {
+                    // What if REGISTER was send before LINKED is receive, but LINKED
+                    // has been received since MESSAGE ?
+                    // -> REGISTER is never send if Ack = false, it sends LINK first
+                    // and add the registration to the queue
+                    // -> The only reason why we could receive an UNAUTH is
+                    // because we had Ack = true, but the distributor do not
+                    // know the token anymore (eg. data has been wiped)
+                    // -> but if there were many REGISTER intent, they were sent with Ack = true
+                    // but in reality this is Ack = false
+                    // => therefore, we NEED to know last LINK event and register event
+                    // It must be monolithically increased, we can use an event count
+                    // TODO, save add store.event_count
+                    // if (store.event_n(token)>store.last_link_event_n) {
+                    //     store.distributorAck = false
+                    //     // No need to check if the distributor is still here, we just receive
+                    //     // an intent with the right token
+                    //     val distributor = store.tryGetDistributor(context) ?: return
+                    //     broadcastLink(context, store, distributor)
+                    // }
+                    // TODO, add this registration to the registrationQueue if it exists
+                    // or send registerApp()
+                }
+                onRegistrationFailed(context, reason, instance)
                 store.removeInstance(instance)
             }
             ACTION_UNREGISTERED -> {

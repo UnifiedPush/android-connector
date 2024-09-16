@@ -111,6 +111,17 @@ internal class Store(context: Context) {
         }
     }
 
+    // If the distributor doesn't support LINK/ED actions
+    // it's still following AND_2
+    internal var legacyDistributor: Boolean
+        get() = synchronized(distributorLock) {
+            preferences.getBoolean(PREF_MASTER_DISTRIBUTOR_AND2, false)
+        }
+        @SuppressLint("ApplySharedPref")
+        set(value) = synchronized(distributorLock) {
+            preferences.edit().putBoolean(PREF_MASTER_DISTRIBUTOR_AND2, value).commit()
+        }
+
     internal var distributorAck: Boolean
         get() = synchronized(distributorLock) {
             preferences.getBoolean(PREF_MASTER_DISTRIBUTOR_ACK, false)
@@ -120,6 +131,25 @@ internal class Store(context: Context) {
             preferences.edit().putBoolean(PREF_MASTER_DISTRIBUTOR_ACK, value).commit()
         }
 
+    internal var tempToken: String?
+        get() = preferences.getString(PREF_MASTER_TEMP_TOKEN, null)
+        @SuppressLint("ApplySharedPref")
+        set(value) {
+            preferences.edit().putString(PREF_MASTER_TEMP_TOKEN, value).commit()
+        }
+
+    internal fun newTempToken(): String {
+        return UUID.randomUUID().toString().also {
+            tempToken = it
+        }
+    }
+
+    internal var authToken: String?
+        get() = preferences.getString(PREF_MASTER_AUTH, null)
+        @SuppressLint("ApplySharedPref")
+        set(value) {
+            preferences.edit().putString(PREF_MASTER_AUTH, value).commit()
+        }
 
     companion object {
         private val tokenLock = Object()
