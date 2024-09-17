@@ -28,7 +28,7 @@ internal class Registration(
         }
 
         fun newOrUpdate(preferences: SharedPreferences, instance: String, messageForDistributor: String?, vapid: String?, eventCount: Int): Registration {
-            val instances = preferences.getStringSet(PREF_MASTER_INSTANCES, null)
+            val instances = preferences.getStringSet(PREF_MASTER_INSTANCES, null)?.toMutableSet()
                 ?: emptySet<String>().toMutableSet()
             var token = preferences.getString(PREF_CONNECTOR_TOKEN.format(instance), null)
             if (!instances.contains(instance)) {

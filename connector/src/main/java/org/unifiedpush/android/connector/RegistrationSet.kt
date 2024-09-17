@@ -1,6 +1,5 @@
 package org.unifiedpush.android.connector
 
-import android.annotation.SuppressLint
 import android.content.SharedPreferences
 
 class RegistrationSet(private val preferences: SharedPreferences) {
@@ -61,10 +60,9 @@ class RegistrationSet(private val preferences: SharedPreferences) {
     /**
      * Remove instance and return the updated set of instances
      */
-    @SuppressLint("MutatingSharedPrefs", "ApplySharedPref")
     internal fun removeInstance(instance: String): Set<String> {
         synchronized(registrationLock) {
-            val instances = preferences.getStringSet(PREF_MASTER_INSTANCES, null)
+            val instances = preferences.getStringSet(PREF_MASTER_INSTANCES, null)?.toMutableSet()
                 ?: emptySet<String>().toMutableSet()
             instances.remove(instance)
             preferences.edit()

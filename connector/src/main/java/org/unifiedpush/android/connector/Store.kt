@@ -1,6 +1,5 @@
 package org.unifiedpush.android.connector
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import java.util.UUID
@@ -16,7 +15,7 @@ internal class Store(context: Context) {
 
     internal fun saveDistributor(distributor: String) {
         synchronized(distributorLock) {
-            preferences.edit().putString(PREF_MASTER_DISTRIBUTOR, distributor).commit()
+            preferences.edit().putString(PREF_MASTER_DISTRIBUTOR, distributor).apply()
         }
     }
 
@@ -43,25 +42,22 @@ internal class Store(context: Context) {
         get() = synchronized(distributorLock) {
             preferences.getBoolean(PREF_MASTER_DISTRIBUTOR_AND2, false)
         }
-        @SuppressLint("ApplySharedPref")
         set(value) = synchronized(distributorLock) {
-            preferences.edit().putBoolean(PREF_MASTER_DISTRIBUTOR_AND2, value).commit()
+            preferences.edit().putBoolean(PREF_MASTER_DISTRIBUTOR_AND2, value).apply()
         }
 
     internal var distributorAck: Boolean
         get() = synchronized(distributorLock) {
             preferences.getBoolean(PREF_MASTER_DISTRIBUTOR_ACK, false)
         }
-        @SuppressLint("ApplySharedPref")
         set(value) = synchronized(distributorLock) {
-            preferences.edit().putBoolean(PREF_MASTER_DISTRIBUTOR_ACK, value).commit()
+            preferences.edit().putBoolean(PREF_MASTER_DISTRIBUTOR_ACK, value).apply()
         }
 
     internal var tempToken: String?
         get() = preferences.getString(PREF_MASTER_TEMP_TOKEN, null)
-        @SuppressLint("ApplySharedPref")
         set(value) {
-            preferences.edit().putString(PREF_MASTER_TEMP_TOKEN, value).commit()
+            preferences.edit().putString(PREF_MASTER_TEMP_TOKEN, value).apply()
         }
 
     internal fun newTempToken(): String {
@@ -72,10 +68,9 @@ internal class Store(context: Context) {
 
     internal var authToken: String?
         get() = preferences.getString(PREF_MASTER_AUTH, null)
-        @SuppressLint("ApplySharedPref")
         set(value) {
             value?.let {
-                preferences.edit().putString(PREF_MASTER_AUTH, value).commit()
+                preferences.edit().putString(PREF_MASTER_AUTH, value).apply()
             } ?: run {
                 preferences.edit().remove(PREF_MASTER_AUTH)
             }
@@ -90,7 +85,7 @@ internal class Store(context: Context) {
     internal fun getEventCountAndIncrement(): Int {
         synchronized(eventCountLock) {
             val count = preferences.getInt(PREF_MASTER_EVENT_COUNT, 0)
-            preferences.edit().putInt(PREF_MASTER_EVENT_COUNT, count +1).commit()
+            preferences.edit().putInt(PREF_MASTER_EVENT_COUNT, count +1).apply()
             return count
         }
     }
