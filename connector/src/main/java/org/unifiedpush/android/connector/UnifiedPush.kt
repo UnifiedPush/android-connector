@@ -39,8 +39,10 @@ object UnifiedPush {
         registration: Registration
     ) {
 
-        // TODO throw error if store.tryGetDistributor is null
-        val distributor = store.tryGetDistributor() ?: return
+        val distributor = store.tryGetDistributor() ?: run {
+            broadcastLocalRegistrationFailed(context, store, registration.instance, FailedReason.DISTRIBUTOR_NOT_SAVED)
+            return
+        }
         val legacy = store.legacyDistributor
 
         if (legacy) {
@@ -63,8 +65,10 @@ object UnifiedPush {
 
         // If it is empty, then the distributor has been uninstalled
         // getDistributor sends UNREGISTERED locally
-        // TODO throw error if the distrib has been uninstalled
-        val distributor = getDistributor(context, store, false) ?: return
+        val distributor = getDistributor(context, store, false) ?: run {
+            broadcastLocalRegistrationFailed(context, store, registration.instance, FailedReason.DISTRIBUTOR_NOT_SAVED)
+            return
+        }
         val broadcastIntent = Intent().apply {
             `package` = distributor
             action = ACTION_REGISTER
@@ -81,15 +85,18 @@ object UnifiedPush {
 
     @JvmStatic
     private fun registerAppv3(context: Context, store: Store, registration: Registration) {
+        //TODO check vapid format
 
         // Here we want to be sure the distributor is still installed
         // or we return => we use getDistributor and not the store directly
         // It doesn't have to be ack yet, because it is
 
         // If the distributor is uninstalled, getDistributor sends UNREGISTERED locally
-        // TODO throw error if the distrib has been uninstalled
-        val distributor = getDistributor(context, store, false) ?: return
-        // If the auth token is empty, it means the LINKED response hasn't been received yet
+        val distributor = getDistributor(context, store, false) ?: run {
+            broadcastLocalRegistrationFailed(context, store, registration.instance, FailedReason.DISTRIBUTOR_NOT_SAVED)
+            return
+        }
+        // If the auth token is empty, it means the LINKED response hasn't been received yet.
         // The registration request is saved already, and the registration will be send when
         // the LINKED is received.
         val auth = store.authToken ?: return
@@ -259,6 +266,17 @@ object UnifiedPush {
             action = ACTION_UNREGISTERED
             putExtra(EXTRA_TOKEN, token)
         }
+        context.sendBroadcast(broadcastIntent)
+    }
+
+    @JvmStatic
+    private fun broadcastLocalRegistrationFailed(context: Context, store: Store, instance: String, reason: FailedReason) {
+        val token = store.registrationSet.tryGetToken(instance) ?: return
+        val broadcastIntent = Intent().apply {
+            `package` = context.packageName
+            action = ACTION_REGISTRATION_FAILED
+            putExtra(EXTRA_TOKEN, token)
+            putExtra(EXTRA_REASON, reason.toString())
         }
         context.sendBroadcast(broadcastIntent)
     }
