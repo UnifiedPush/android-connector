@@ -259,8 +259,6 @@ object UnifiedPush {
             action = ACTION_UNREGISTERED
             putExtra(EXTRA_TOKEN, token)
         }
-        store.registrationSet.removeInstance(instance).ifEmpty {
-            store.removeDistributor()
         }
         context.sendBroadcast(broadcastIntent)
     }
