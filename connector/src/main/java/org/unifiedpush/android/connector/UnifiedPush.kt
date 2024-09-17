@@ -118,10 +118,11 @@ object UnifiedPush {
             return
         }
         val token = store.registrationSet.tryGetToken(instance) ?: return
-        val broadcastIntent = Intent()
-        broadcastIntent.`package` = distributor
-        broadcastIntent.action = ACTION_UNREGISTER
-        broadcastIntent.putExtra(EXTRA_TOKEN, token)
+        val broadcastIntent = Intent().apply {
+            `package` = distributor
+            action = ACTION_UNREGISTER
+            putExtra(EXTRA_TOKEN, token)
+        }
         store.registrationSet.removeInstance(instance).ifEmpty {
             store.removeDistributor()
         }
@@ -253,10 +254,11 @@ object UnifiedPush {
     @JvmStatic
     private fun broadcastLocalUnregistered(context: Context, store: Store, instance: String) {
         val token = store.registrationSet.tryGetToken(instance) ?: return
-        val broadcastIntent = Intent()
-        broadcastIntent.`package` = context.packageName
-        broadcastIntent.action = ACTION_UNREGISTERED
-        broadcastIntent.putExtra(EXTRA_TOKEN, token)
+        val broadcastIntent = Intent().apply {
+            `package` = context.packageName
+            action = ACTION_UNREGISTERED
+            putExtra(EXTRA_TOKEN, token)
+        }
         store.registrationSet.removeInstance(instance).ifEmpty {
             store.removeDistributor()
         }

@@ -121,11 +121,12 @@ open class MessagingReceiver : BroadcastReceiver() {
         token: String
     ) {
         id?.let {
-            val broadcastIntent = Intent()
-            broadcastIntent.`package` = distributor
-            broadcastIntent.action = ACTION_MESSAGE_ACK
-            broadcastIntent.putExtra(EXTRA_TOKEN, token)
-            broadcastIntent.putExtra(EXTRA_MESSAGE_ID, it)
+            val broadcastIntent = Intent().apply {
+                `package` = distributor
+                action = ACTION_MESSAGE_ACK
+                putExtra(EXTRA_TOKEN, token)
+                putExtra(EXTRA_MESSAGE_ID, it)
+            }
             context.sendBroadcast(broadcastIntent)
         }
     }
