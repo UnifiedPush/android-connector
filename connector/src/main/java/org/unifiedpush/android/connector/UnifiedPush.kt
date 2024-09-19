@@ -17,17 +17,19 @@ object UnifiedPush {
         context: Context,
         instance: String = INSTANCE_DEFAULT,
         messageForDistributor: String? = null,
-        vapid: String? = null
-    ) {
+        vapid: String? = null,
+        encrypted: Boolean = true
+    ) : PublicKeySet? {
         val store = Store(context)
-        registerApp(
+        return registerApp(
             context,
             store,
             store.registrationSet.newOrUpdate(
                 instance,
                 messageForDistributor,
                 vapid,
-                store.getEventCountAndIncrement()
+                encrypted,
+                store.getEventCountAndIncrement(),
             )
         )
     }
@@ -37,11 +39,11 @@ object UnifiedPush {
         context: Context,
         store: Store,
         registration: Registration
-    ) {
+    ) : PublicKeySet? {
 
         val distributor = store.tryGetDistributor() ?: run {
             broadcastLocalRegistrationFailed(context, store, registration.instance, FailedReason.DISTRIBUTOR_NOT_SAVED)
-            return
+            return null
         }
         val legacy = store.legacyDistributor
 
@@ -58,6 +60,7 @@ object UnifiedPush {
         } else {
             registerAppv3(context, store, registration)
         }
+        return registration.webPushKeys?.publicKeySet
     }
 
     @JvmStatic

@@ -5,6 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.os.PowerManager
 import android.util.Log
+import com.google.crypto.tink.apps.webpush.WebPushHybridDecrypt
+import java.security.GeneralSecurityException
+import java.security.interfaces.ECPrivateKey
+import java.security.interfaces.ECPublicKey
 
 open class MessagingReceiver : BroadcastReceiver() {
 
@@ -101,7 +105,21 @@ open class MessagingReceiver : BroadcastReceiver() {
             ACTION_MESSAGE -> {
                 val message = intent.getByteArrayExtra(EXTRA_BYTES_MESSAGE) ?: return
                 val id = intent.getStringExtra(EXTRA_MESSAGE_ID)
-                onMessage(context, message, instance)
+                store.registrationSet.tryGetWebPushKeys(instance)?.let { wp ->
+                    try {
+                        val hybridDecrypt =
+                            WebPushHybridDecrypt.Builder()
+                                .withAuthSecret(wp.auth)
+                                .withRecipientPublicKey(wp.keyPair.public as ECPublicKey)
+                                .withRecipientPrivateKey(wp.keyPair.private as ECPrivateKey)
+                                .build()
+                        val clearMessage = hybridDecrypt.decrypt(message, null)
+                        onMessage(context, clearMessage, instance)
+                    } catch (e: GeneralSecurityException) {
+                        Log.w(TAG, "Could not decrypt message, trying with plain text. Cause: ${e.message}")
+                        onMessage(context, message, instance)
+                    }
+                } ?: onMessage(context, message, instance)
                 store.tryGetDistributor()?.let {
                     mayAcknowledgeMessage(context, it, id, token)
                 }
