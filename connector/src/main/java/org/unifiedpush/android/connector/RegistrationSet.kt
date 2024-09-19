@@ -2,7 +2,7 @@ package org.unifiedpush.android.connector
 
 import android.content.SharedPreferences
 
-class RegistrationSet(private val preferences: SharedPreferences) {
+internal class RegistrationSet(private val preferences: SharedPreferences) {
 
     internal fun tryGetToken(instance: String): String? {
         return synchronized(registrationLock) {
