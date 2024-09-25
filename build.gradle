@@ -14,6 +14,10 @@ buildscript {
     }
 }
 
+plugins {
+    id 'org.jetbrains.dokka' version '1.9.20'
+}
+
 allprojects {
     repositories {
         google()
@@ -23,4 +27,49 @@ allprojects {
 
 tasks.register('clean', Delete) {
     delete rootProject.buildDir
+}
+
+// DOKKA
+import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.dokka.gradle.DokkaTaskPartial
+
+def setDokkaBase(task) {
+    String dokkaBaseConfiguration = """
+    {
+      "customStyleSheets": ["${file("$rootDir/dokka/tab_style.css")}"],
+      "separateInheritedMembers": true,
+      "mergeImplicitExpectActualDeclarations": false
+    }
+    """
+    task.pluginsMapConfiguration.set(
+            ["org.jetbrains.dokka.base.DokkaBase": dokkaBaseConfiguration]
+    )
+}
+
+def setDokkaTask(task) {
+    setDokkaBase(task)
+    task.dokkaSourceSets.configureEach {
+        if (project.file("Module.md").exists()) {
+            includes.from(project.file("Module.md"))
+        }
+    }
+}
+
+subprojects {
+    apply plugin: 'org.jetbrains.dokka'
+    apply plugin: 'kotlin-android'
+    tasks.withType(DokkaTaskPartial.class) {
+        setDokkaTask(it)
+    }
+    tasks.withType(DokkaTask.class) {
+        setDokkaTask(it)
+        outputDirectory.set(file("$rootDir/kdoc"))
+    }
+}
+
+dokkaHtmlMultiModule {
+    outputDirectory.set(file("$rootDir/kdoc"))
+    moduleName.set("UnifiedPush")
+    includes.from(project.file("$rootDir/Doc.md"))
+    setDokkaBase(it)
 }

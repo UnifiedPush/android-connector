@@ -7,11 +7,117 @@ import android.content.pm.ResolveInfo
 import android.os.Build
 import android.util.Log
 
+/**
+ * Object containing functions to interact with the distributor
+ *
+ * <!-- Note: This must be mirrored in Module.md -->
+ *
+ * ### Request a new registration
+ *
+ * You first need to pick and save the distributor the user wants to use. If there is only one installed you can directly use that one, else this must be done with a user interaction.
+ *
+ * If you want, the library `org.unifiedpush.android:connector-ui` offers a customizable dialog that request user's choice and register to this distributor.
+ *
+ * Once the user has chosen the distributor, you have to save it with [`saveDistributor`][org.unifiedpush.android.connector.UnifiedPush.saveDistributor]. This function must be called before [`registerApp`][org.unifiedpush.android.connector.UnifiedPush.registerApp].
+ *
+ * When the distributor is saved, you can call [`registerApp`][org.unifiedpush.android.connector.UnifiedPush.registerApp] to request a new registration. It has optional parameters, the following example uses `messageForDistributor` and `vapid`. You can use `instance` to bring multiple-registration support to your application.
+ *
+ * [`registerApp`][org.unifiedpush.android.connector.UnifiedPush.registerApp] have to be called from time to time, for instance when the application starts, to be sure the distributor is still installed and correctly linked.
+ *
+ * <div class="tabs">
+ * <input class="tabs_control hidden" type="radio" id="tabs-1-receiver-0" name="tabs-1" checked>
+ * <label class="tabs_label" for="tabs-1-receiver-0">Kotlin</label>
+ * <div class="tabs_content">
+ * <!-- CONTENT KOTLIN -->
+ *
+ * ```kotlin
+ * import org.unifiedpush.android.connector.UnifiedPush
+ * /* ... */
+ *
+ * // Check if a distributor is already registered
+ * UnifiedPush.getAckDistributor(context)?.let {
+ *     // Re-register in case something broke
+ *     UnifiedPush.registerApp(context, messageForDistributor, vapid)
+ *     return
+ * }
+ * // Get a list of distributors that are available
+ * val distributors = UnifiedPush.getDistributors(context)
+ * // select one or ask the user which distributor to use, eg. with a dialog
+ * val userDistrib = yourFunc(distributors)
+ * // save the distributor
+ * UnifiedPush.saveDistributor(context, userDistrib)
+ * // register your app to the distributor
+ * UnifiedPush.registerApp(context, messageForDistributor, vapid)
+ * ```
+ *
+ * <!-- END KOTLIN -->
+ * </div>
+ * <input class="tabs_control hidden" type="radio" id="tabs-1-receiver-1" name="tabs-1">
+ * <label class="tabs_label" for="tabs-1-receiver-1">Java</label>
+ * <div class="tabs_content">
+ * <!-- CONTENT JAVA -->
+ *
+ * ```java
+ * import static org.unifiedpush.android.connector.ConstantsKt.INSTANCE_DEFAULT;
+ * import org.unifiedpush.android.connector.UnifiedPush;
+ * /* ... */
+ *
+ * // Check if a distributor is already registered
+ * if (UnifiedPush.getAckDistributor(context) != null) {
+ *     // Re-register in case something broke
+ *     UnifiedPush.registerApp(
+ *         context,
+ *         INSTANCE_DEFAULT,
+ *         messageForDistributor,
+ *         vapid,
+ *         true
+ *     );
+ *     return;
+ * }
+ * // Get a list of distributors that are available
+ * List<String> distributors = UnifiedPush.getDistributors(context);
+ * // select one or show a dialog or whatever
+ * String userDistrib = yourFunc(distributors);
+ * // the below line will crash the app if no distributors are available
+ * UnifiedPush.saveDistributor(context, userDistrib);
+ * UnifiedPush.registerApp(
+ *     context,
+ *     INSTANCE_DEFAULT,
+ *     messageForDistributor,
+ *     vapid,
+ *     true
+ * );
+ * ```
+ *
+ * <!-- END JAVA -->
+ * </div>
+ * </div>
+ *
+ * ### Unsubscribe
+ *
+ * To unsubscribe, simply call [`unregisterApp`][org.unifiedpush.android.connector.UnifiedPush.unregisterApp]. Set the instance you want to unsubscribed to if you used one during registration.
+ *
+ * It removes the distributor if this is the last instance to unregister.
+ */
 object UnifiedPush {
 
     // For compatibility purpose with AND_2
     private const val FEATURE_BYTES_MESSAGE = "org.unifiedpush.android.distributor.feature.BYTES_MESSAGE"
 
+    /**
+     * Request a new registration for the [instance] to the saved distributor.
+     *
+     * [saveDistributor] must be called before this function. Else [MessagingReceiver.onRegistrationFailed] will be called with the reason [FailedReason.DISTRIBUTOR_NOT_SAVED].
+     *
+     * If there was a distributor but it has been removed, [MessagingReceiver.onUnregistered] will be called for all subscribed instances.
+     *
+     * @param [instance] Registration instance. Can be used to get multiple registrations, eg. for multi-account support.
+     * @param [messageForDistributor] May be shown by the distributor UI to identify this registration
+     * @param [vapid] VAPID public key ([RFC8292](https://www.rfc-editor.org/rfc/rfc8292)) base64url encoded of the uncompressed form (87 chars long)
+     * @param [encrypted] If push message decryption is to be supported by the library (default=true)
+     *
+     * @return A [PublicKeySet] if the decryption of the messages is handled by the library (default)
+     */
     @JvmStatic
     fun registerApp(
         context: Context,
@@ -119,6 +225,13 @@ object UnifiedPush {
         context.sendBroadcast(broadcastIntent)
     }
 
+    /**
+     * Send an unregistration request for the [instance] to the saved distributor and remove the registration. Remove the distributor if this is the last instance registered.
+     *
+     * [MessagingReceiver.onUnregistered] won't be called after that request.
+     *
+     * @param [instance] Registration instance. Can be used to get multiple registrations, eg. for multi-account support.
+     */
     @JvmStatic
     fun unregisterApp(context: Context, instance: String = INSTANCE_DEFAULT) {
         val store = Store(context)
@@ -140,6 +253,11 @@ object UnifiedPush {
         context.sendBroadcast(broadcastIntent)
     }
 
+    /**
+     * Get a list of available distributors installed on the system
+     *
+     * @return The list of distributor's package name
+     */
     @JvmStatic
     fun getDistributors(
         context: Context
@@ -192,6 +310,11 @@ object UnifiedPush {
         return getResolveInfo(context, ACTION_LINK, packageName).none()
     }
 
+    /**
+     * Save [distributor] as the new distributor to use
+     *
+     * @param [distributor] The distributor package name
+     */
     @JvmStatic
     fun saveDistributor(context: Context, distributor: String) {
         val store = Store(context)
@@ -216,15 +339,19 @@ object UnifiedPush {
         }
     }
     /**
-     * This function returns the distributor registered by the user,
-     * but the distributor may not have sent a new endpoint yet
+     * Get the distributor registered by the user, but the
+     * distributor may not have respond yet to our requests. Most of the time [getAckDistributor] is preferred.
+     *
+     * @return The distributor package name if any, else null
      */
     @JvmStatic
     fun getSavedDistributor(context: Context): String? = getDistributor(context, Store(context), false)
 
     /**
-     * This function returns the distributor registered by the user,
-     * and the distributor has already sent a new endpoint
+     * Get the distributor registered by the user, and the
+     * distributor has already respond to our requests
+     *
+     * @return The distributor package name if any, else null
      */
     @JvmStatic
     fun getAckDistributor(context: Context): String? = getDistributor(context, Store(context), true)
@@ -306,9 +433,13 @@ object UnifiedPush {
         return false
     }
 
+    /**
+     * Unregister all instances and remove the distributor
+     */
     @JvmStatic
     fun forceRemoveDistributor(context: Context) {
         val store = Store(context)
+        // TODO: send unregistration for all instances
         store.registrationSet.removeInstances()
         store.removeDistributor()
     }

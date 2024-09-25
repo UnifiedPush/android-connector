@@ -11,14 +11,17 @@ import java.security.spec.ECPublicKeySpec
 import java.security.spec.PKCS8EncodedKeySpec
 
 /**
- * https://www.rfc-editor.org/rfc/rfc8291
+ * Contains Web Push (public) keys information necessary for the application server
+ * to encrypt notification for this instance, following [RFC8291](https://www.rfc-editor.org/rfc/rfc8291)
  */
-
 class PublicKeySet(
     val pubKey: String,
     val auth: String,
 )
 
+/**
+ * Contains Web Push keys information necessary to decrypt the messages
+ */
 internal class WebPushKeys(
     val keyPair: KeyPair,
     val auth: ByteArray,

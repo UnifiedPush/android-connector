@@ -50,7 +50,7 @@ internal const val WAKE_LOCK_TAG = "android-connector:lock"
 internal const val TAG = "UnifiedPush"
 
 /**
- * Default instance used by the library during registration and unregistration
- * if not passed as an argument
+ * Default instance used by the library during [registration][UnifiedPush.registerApp]
+ * and [unregistration][UnifiedPush.unregisterApp] if not passed as an argument
  */
 const val INSTANCE_DEFAULT = "default"
