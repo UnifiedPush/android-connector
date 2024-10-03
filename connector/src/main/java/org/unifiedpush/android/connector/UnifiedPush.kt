@@ -214,7 +214,7 @@ object UnifiedPush {
             `package` = distributor
             action = ACTION_REGISTER
             putExtra(EXTRA_TOKEN, registration.token)
-            putExtra(EXTRA_AUTH, auth)
+            putExtra(EXTRA_AUTH_TOKEN, auth)
             putExtra(EXTRA_APPLICATION, context.packageName)
             registration.messageForDistributor?.let {
                 putExtra(EXTRA_MESSAGE_FOR_DISTRIB, it)
@@ -380,11 +380,11 @@ object UnifiedPush {
     internal fun broadcastLink(context: Context, store: Store, distributor: String) {
         // It must send REGISTRATION_FAILED with ACTION_REQUIRED
         store.lastLinkRequest = store.getEventCountAndIncrement()
-        val tempToken = store.newTempToken()
+        val tempToken = store.newLinkToken()
         val broadcastIntent = Intent().apply {
             `package` = distributor
             action = ACTION_LINK
-            putExtra(EXTRA_AUTH, tempToken)
+            putExtra(EXTRA_LINK_TOKEN, tempToken)
         }
         context.sendBroadcast(broadcastIntent)
     }

@@ -54,15 +54,15 @@ internal class Store(context: Context) {
             preferences.edit().putBoolean(PREF_MASTER_DISTRIBUTOR_ACK, value).apply()
         }
 
-    internal var tempToken: String?
+    internal var linkToken: String?
         get() = preferences.getString(PREF_MASTER_TEMP_TOKEN, null)
         set(value) {
             preferences.edit().putString(PREF_MASTER_TEMP_TOKEN, value).apply()
         }
 
-    internal fun newTempToken(): String {
+    internal fun newLinkToken(): String {
         return UUID.randomUUID().toString().also {
-            tempToken = it
+            linkToken = it
         }
     }
 

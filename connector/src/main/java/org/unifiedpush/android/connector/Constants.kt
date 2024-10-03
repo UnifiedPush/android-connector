@@ -36,8 +36,9 @@ internal const val ACTION_UNREGISTER = "org.unifiedpush.android.distributor.UNRE
 internal const val ACTION_MESSAGE_ACK = "org.unifiedpush.android.distributor.MESSAGE_ACK"
 
 internal const val EXTRA_APPLICATION = "application"
+internal const val EXTRA_LINK_TOKEN = "link_token"
+internal const val EXTRA_AUTH_TOKEN = "auth_token"
 internal const val EXTRA_TOKEN = "token"
-internal const val EXTRA_AUTH = "auth"
 internal const val EXTRA_FEATURES = "features"
 internal const val EXTRA_ENDPOINT = "endpoint"
 internal const val EXTRA_MESSAGE_FOR_DISTRIB = "message"

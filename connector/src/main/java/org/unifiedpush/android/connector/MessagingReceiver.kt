@@ -138,8 +138,8 @@ open class MessagingReceiver : BroadcastReceiver() {
         // For the linked request, we use a temporary token,
         // which is different from connection tokens
         if (intent.action == ACTION_LINKED
-            && intent.getStringExtra(EXTRA_AUTH) == store.tempToken) {
-            store.authToken = intent.getStringExtra(EXTRA_AUTH) ?: return
+            && intent.getStringExtra(EXTRA_LINK_TOKEN) == store.linkToken) {
+            store.authToken = intent.getStringExtra(EXTRA_AUTH_TOKEN) ?: return
             store.distributorAck = true
             // Every registration that hasn't been acknowledge has been sent before LINKED was received
             store.registrationSet.forEachRegistration {
