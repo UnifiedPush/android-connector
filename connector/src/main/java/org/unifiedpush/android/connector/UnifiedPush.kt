@@ -215,6 +215,7 @@ object UnifiedPush {
             action = ACTION_REGISTER
             putExtra(EXTRA_TOKEN, registration.token)
             putExtra(EXTRA_AUTH, auth)
+            putExtra(EXTRA_APPLICATION, context.packageName)
             registration.messageForDistributor?.let {
                 putExtra(EXTRA_MESSAGE_FOR_DISTRIB, it)
             }
