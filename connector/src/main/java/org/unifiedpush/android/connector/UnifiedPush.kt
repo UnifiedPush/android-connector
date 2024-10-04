@@ -380,6 +380,55 @@ object UnifiedPush {
     }
 
     /**
+     * Try to use the saved distributor else, use the default distributor opening the deeplink "unifiedpush://link"
+     *
+     * It can be used on application startup to register to the distributor.
+     * If you had already registered to a distributor, this ensure the connection is working.
+     * If the previous distributor has been uninstalled, it will fallback to the user's default.
+     * If you register for the first time, it will use the user's default Distributor or the OS will
+     * ask what it should use.
+     *
+     * **External distributors will be favored over embedded distributors.**
+     *
+     * Be aware that this function may start a new translucent activity in order to
+     * get the result of the distributor activity. You may prefer to use [LinkActivityHelper]
+     * directly in your own activity instead.
+     *
+     * ## Usage
+     *
+     * Kotlin:
+     * ```
+     * tryUseCurrentOrDefaultDistributor(context) { success ->
+     *     if (success) {
+     *         //TODO: registerApp
+     *     }
+     * }
+     * ```
+     *
+     * Java:
+     * ```
+     * UnifiedPush.tryUseCurrentOrDefaultDistributor(context, success -> {
+     *     if (success) {
+     *         //TODO: registerApp
+     *     }
+     *     return null;
+     * });
+     * ```
+     *
+     * @param [context] Must be an activity or it will fail if there is no current distributor and the callback will be called with `false`
+     * @param [callback] is a function taking a Boolean as parameter. This boolean is
+     * true if the registration using the deeplink succeeded.
+     */
+    @JvmStatic
+    fun tryUseCurrentOrDefaultDistributor(context: Context, callback: (Boolean) -> Unit) {
+        getAckDistributor(context)?.let {
+            callback(true)
+        } ?: run {
+            tryUseDefaultDistributor(context, callback)
+        }
+    }
+
+    /**
      * Save [distributor] as the new distributor to use
      *
      * @param [distributor] The distributor package name
