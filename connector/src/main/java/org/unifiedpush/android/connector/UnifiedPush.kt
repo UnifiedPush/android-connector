@@ -335,10 +335,34 @@ object UnifiedPush {
      *
      * It allows users to define a default distributor for all their applications
      *
-     * Be aware that this function starts another translucent activity in order to
-     * get the result of the activity. You may prefer to use [LinkActivityHelper]
-     * in your own activity directly.
+     * **External distributors will be favored over embedded distributors.**
      *
+     * Be aware that this function starts a new translucent activity in order to
+     * get the result of the distributor activity. You may prefer to use [LinkActivityHelper]
+     * directly in your own activity instead.
+     *
+     * ## Usage
+     *
+     * Kotlin:
+     * ```
+     * tryUseDefaultDistributor(context) { success ->
+     *     if (success) {
+     *         //TODO: registerApp
+     *     }
+     * }
+     * ```
+     *
+     * Java:
+     * ```
+     * UnifiedPush.tryUseDefaultDistributor(context, success -> {
+     *     if (success) {
+     *         //TODO: registerApp
+     *     }
+     *     return null;
+     * });
+     * ```
+     *
+     * @param [context] Must be an activity or it will fail and the callback will be called with `false`
      * @param [callback] is a function taking a Boolean as parameter. This boolean is
      * true if the registration using the deeplink succeeded.
      */
