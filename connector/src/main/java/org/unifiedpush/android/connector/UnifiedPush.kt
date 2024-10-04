@@ -367,12 +367,16 @@ object UnifiedPush {
      * true if the registration using the deeplink succeeded.
      */
     @JvmStatic
-    fun tryUseDefaultDistributor(context: Activity, callback: (Boolean) -> Unit) {
-        LinkActivity.callback = callback
-        val intent = Intent().apply {
-            setClassName(context.packageName, LinkActivity::class.java.name)
+    fun tryUseDefaultDistributor(context: Context, callback: (Boolean) -> Unit) {
+        if (context is Activity) {
+            LinkActivity.callback = callback
+            val intent = Intent().apply {
+                setClassName(context.packageName, LinkActivity::class.java.name)
+            }
+            context.startActivity(intent)
+        } else {
+            callback(false)
         }
-        context.startActivity(intent)
     }
 
     /**
