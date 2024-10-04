@@ -116,17 +116,97 @@ Interactions with the distributor are done with the [`UnifiedPush`][org.unifiedp
 
 <!-- Note: This must be mirrored in UnifiedPush comments -->
 
-### Request a new registration
+### Use user's default distributor
 
-You first need to pick and save the distributor the user wants to use. If there is only one installed you can directly use that one, else this must be done with a user interaction.
+Users are allowed to define a default distributor on their system, because UnifiedPush distributors
+have to be able to process a deeplink.
 
-If you want, the library `org.unifiedpush.android:connector-ui` offers a customizable dialog that request user's choice and register to this distributor.
+When you set UnifiedPush for the first time on your application, you will want to use the default user's
+distributor.
 
-Once the user has chosen the distributor, you have to save it with [`saveDistributor`][org.unifiedpush.android.connector.UnifiedPush.saveDistributor]. This function must be called before [`registerApp`][org.unifiedpush.android.connector.UnifiedPush.registerApp].
+From time to time, like every time you starts your application, you should register your application in case the
+user have uninstalled the previous distributor.
+If the previous distributor is uninstalled, you can fallback to the default one again.
 
-When the distributor is saved, you can call [`registerApp`][org.unifiedpush.android.connector.UnifiedPush.registerApp] to request a new registration. It has optional parameters, the following example uses `messageForDistributor` and `vapid`. You can use `instance` to bring multiple-registration support to your application.
+Therefore, you can use [tryUseCurrentOrDefaultDistributor][org.unifiedpush.android.connector.UnifiedPush.tryUseCurrentOrDefaultDistributor]
+to select the saved distributor or the default one when your application starts (when your main activity is created for instance).
 
-[`registerApp`][org.unifiedpush.android.connector.UnifiedPush.registerApp] have to be called from time to time, for instance when the application starts, to be sure the distributor is still installed and correctly linked.
+When the distributor is saved, you can call [`registerApp`][org.unifiedpush.android.connector.UnifiedPush.registerApp] to request a new registration.
+It has optional parameters, the following example uses `messageForDistributor` and `vapid`.
+You can use `instance` to bring multiple-registration support to your application.
+
+_If you want, you can use the library `org.unifiedpush.android:connector-ui` instead, it displays a dialog explaining why
+the OS picker is going to ask which application to pick._
+
+<div class="tabs">
+<input class="tabs_control hidden" type="radio" id="tabs-trydefault-receiver-0" name="tabs-trydefault" checked>
+<label class="tabs_label" for="tabs-trydefault-receiver-0">Kotlin</label>
+<div class="tabs_content">
+<!-- CONTENT KOTLIN -->
+
+```kotlin
+import org.unifiedpush.android.connector.UnifiedPush
+/* ... */
+
+UnifiedPush.tryUseCurrentOrDefaultDistributor(context) { success ->
+    if (success) {
+        // We have a distributor
+        // Register your app to the distributor
+        UnifiedPush.registerApp(context, messageForDistributor, vapid)
+    }
+}
+```
+
+<!-- END KOTLIN -->
+</div>
+<input class="tabs_control hidden" type="radio" id="tabs-trydefault-receiver-1" name="tabs-trydefault">
+<label class="tabs_label" for="tabs-trydefault-receiver-1">Java</label>
+<div class="tabs_content">
+<!-- CONTENT JAVA -->
+
+```java
+import static org.unifiedpush.android.connector.ConstantsKt.INSTANCE_DEFAULT;
+import org.unifiedpush.android.connector.UnifiedPush;
+/* ... */
+
+UnifiedPush.tryUseCurrentOrDefaultDistributor(context, success ->{
+    if (success) {
+        // We have a distributor
+        // Register your app to the distributor
+        UnifiedPush.registerApp(
+            context,
+            INSTANCE_DEFAULT,
+            messageForDistributor,
+            vapid,
+            true
+        );
+    }
+});
+```
+
+<!-- END JAVA -->
+</div>
+</div>
+
+Be aware that [tryUseDefaultDistributor][org.unifiedpush.android.connector.UnifiedPush.tryUseDefaultDistributor]
+starts a new translucent activity in order to get the result of the distributor activity. You may prefer to use
+[LinkActivityHelper][org.unifiedpush.android.connector.LinkActivityHelper] directly in your own activity instead.
+
+### Use another distributor
+
+You will probably want to allow the users to use another distributor but their default one.
+
+For this, you can get the list of available distributors with [`getDistributors`][org.unifiedpush.android.connector.UnifiedPush.getDistributors].
+
+Once the user has chosen the distributor, you have to save it with [`saveDistributor`][org.unifiedpush.android.connector.UnifiedPush.saveDistributor].
+This function must be called before [`registerApp`][org.unifiedpush.android.connector.UnifiedPush.registerApp].
+
+When the distributor is saved, you can call [`registerApp`][org.unifiedpush.android.connector.UnifiedPush.registerApp] to request a new registration.
+It has optional parameters, the following example uses `messageForDistributor` and `vapid`.
+You can use `instance` to bring multiple-registration support to your application.
+
+_If you want, the library `org.unifiedpush.android:connector-ui` offers a customizable dialog
+that request user's choice and register to this distributor._
 
 <div class="tabs">
 <input class="tabs_control hidden" type="radio" id="tabs-1-receiver-0" name="tabs-1" checked>
@@ -138,12 +218,6 @@ When the distributor is saved, you can call [`registerApp`][org.unifiedpush.andr
 import org.unifiedpush.android.connector.UnifiedPush
 /* ... */
 
-// Check if a distributor is already registered
-UnifiedPush.getAckDistributor(context)?.let {
-    // Re-register in case something broke
-    UnifiedPush.registerApp(context, messageForDistributor, vapid)
-    return
-}
 // Get a list of distributors that are available
 val distributors = UnifiedPush.getDistributors(context)
 // select one or ask the user which distributor to use, eg. with a dialog
@@ -166,18 +240,6 @@ import static org.unifiedpush.android.connector.ConstantsKt.INSTANCE_DEFAULT;
 import org.unifiedpush.android.connector.UnifiedPush;
 /* ... */
 
-// Check if a distributor is already registered
-if (UnifiedPush.getAckDistributor(context) != null) {
-    // Re-register in case something broke
-    UnifiedPush.registerApp(
-        context,
-        INSTANCE_DEFAULT,
-        messageForDistributor,
-        vapid,
-        true
-    );
-    return;
-}
 // Get a list of distributors that are available
 List<String> distributors = UnifiedPush.getDistributors(context);
 // select one or show a dialog or whatever
