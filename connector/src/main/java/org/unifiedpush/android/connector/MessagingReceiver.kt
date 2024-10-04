@@ -142,15 +142,7 @@ open class MessagingReceiver : BroadcastReceiver() {
             store.authToken = intent.getStringExtra(EXTRA_AUTH_TOKEN) ?: return
             store.distributorAck = true
             // Every registration that hasn't been acknowledge has been sent before LINKED was received
-            store.registrationSet.forEachRegistration {
-                if (!it.ack) {
-                    UnifiedPush.registerApp(
-                        context,
-                        store,
-                        it
-                    )
-                }
-            }
+            UnifiedPush.registerEveryUnAckApp(context, store)
             return
         }
         val instance = token?.let {

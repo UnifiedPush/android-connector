@@ -1,5 +1,6 @@
 package org.unifiedpush.android.connector
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -227,6 +228,24 @@ object UnifiedPush {
     }
 
     /**
+     * Send registration request for every instances that haven't been ack
+     *
+     * Used when we receive a LINKED, or the result from the link activity
+     */
+    @JvmStatic
+    internal fun registerEveryUnAckApp(context: Context, store: Store) {
+        store.registrationSet.forEachRegistration {
+            if (!it.ack) {
+                registerApp(
+                    context,
+                    store,
+                    it
+                )
+            }
+        }
+    }
+
+    /**
      * Send an unregistration request for the [instance] to the saved distributor and remove the registration. Remove the distributor if this is the last instance registered.
      *
      * [MessagingReceiver.onUnregistered] won't be called after that request.
@@ -309,6 +328,27 @@ object UnifiedPush {
     @JvmStatic
     private fun isLegacyDistributor(context: Context, packageName: String): Boolean {
         return getResolveInfo(context, ACTION_LINK, packageName).none()
+    }
+
+    /**
+     * Try to use the distributor opening the deeplink "unifiedpush://link"
+     *
+     * It allows users to define a default distributor for all their applications
+     *
+     * Be aware that this function starts another translucent activity in order to
+     * get the result of the activity. You may prefer to use [LinkActivityHelper]
+     * in your own activity directly.
+     *
+     * @param [callback] is a function taking a Boolean as parameter. This boolean is
+     * true if the registration using the deeplink succeeded.
+     */
+    @JvmStatic
+    fun tryUseDefaultDistributor(context: Activity, callback: (Boolean) -> Unit) {
+        LinkActivity.callback = callback
+        val intent = Intent().apply {
+            setClassName(context.packageName, LinkActivity::class.java.name)
+        }
+        context.startActivity(intent)
     }
 
     /**
