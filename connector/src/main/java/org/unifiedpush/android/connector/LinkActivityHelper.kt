@@ -30,7 +30,7 @@ import android.util.Log
  *
  *     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
  *         if (helper.onLinkActivityResult(requestCode, resultCode, data)) {
- *             // The distributor is saved, you can request registrations with UnifiedPush.register now
+ *             // The distributor is saved, you can request registrations with UnifiedPush.registerApp now
  *         } else {
  *            // An error occurred, consider no distributor found for the moment
  *         }
@@ -39,7 +39,7 @@ import android.util.Log
  * }
  * ```
  */
-class LinkActivityHelper(val activity: Activity) {
+class LinkActivityHelper(private val activity: Activity) {
     private val TAG = "UnifiedPush.Link"
     private val gRequestCode = (1..Int.MAX_VALUE).random()
 
@@ -54,8 +54,8 @@ class LinkActivityHelper(val activity: Activity) {
         }
         val pm = activity.packageManager
         val resolveInfo = pm.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
-        resolveInfo?.run {
-            Log.d(TAG, "Found activity for ${resolveInfo.activityInfo.packageName}")
+        resolveInfo?.let {
+            Log.d(TAG, "Found activity for ${it.activityInfo.packageName} default=${it.activityInfo.packageName != "android"}")
             activity.startActivityForResult(intent, gRequestCode)
             return true
         } ?: run {
