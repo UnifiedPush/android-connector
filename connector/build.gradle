@@ -48,6 +48,8 @@ android {
 }
 
 dependencies {
+    dokkaHtmlPlugin "org.jetbrains.dokka:android-documentation-plugin:$dokka_version"
+    dokkaHtmlPartialPlugin "org.jetbrains.dokka:android-documentation-plugin:$dokka_version"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "com.google.crypto.tink:apps-webpush:1.11.0"
 }
