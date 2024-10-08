@@ -86,7 +86,6 @@ class LinkActivityHelper(private val activity: Activity) {
                 Log.d(TAG, "Using distributor $it.")
                 val store = Store(activity).apply {
                     saveDistributor(it)
-                    distributorAck = true
                 }
                 UnifiedPush.registerEveryUnAckApp(activity, store)
                 return true
