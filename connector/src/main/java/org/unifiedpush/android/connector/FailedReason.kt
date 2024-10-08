@@ -20,10 +20,6 @@ enum class FailedReason {
  * The distributor requires a VAPID key and you didn't provide one during [registration][UnifiedPush.registerApp].
  */
     VAPID_REQUIRED,
-/**
- * The distributor is not installed anymore, you can inform the user about that and request to pick another one.
- */
-    DISTRIBUTOR_NOT_SAVED
 }
 
 internal fun String?.toFailedReason(): FailedReason {
