@@ -631,7 +631,9 @@ object UnifiedPush {
     @JvmStatic
     fun forceRemoveDistributor(context: Context) {
         val store = Store(context)
-        // TODO: send unregistration for all instances
+        store.registrationSet.forEachInstance {
+            unregisterApp(context, it)
+        }
         store.registrationSet.removeInstances()
         store.removeDistributor()
     }
