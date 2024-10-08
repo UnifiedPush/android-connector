@@ -2,9 +2,11 @@ package org.unifiedpush.android.connector
 
 import android.app.Activity
 import android.app.Activity.RESULT_OK
+import android.app.PendingIntent
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 
 /**
@@ -75,21 +77,23 @@ class LinkActivityHelper(private val activity: Activity) {
         val isResultCodeOK = resultCode == RESULT_OK
         if (isRequestCodeMatching && isResultCodeOK) {
             Log.d(TAG, "The deep link has correctly been proceeded")
-            val authToken = data?.getStringExtra(EXTRA_AUTH_TOKEN)
-            val application = data?.getStringExtra(EXTRA_APPLICATION)
-            if (authToken != null && application != null) {
-                Log.d(TAG, "Using distributor $application.")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                data?.getParcelableExtra("pi", PendingIntent::class.java)
+            } else {
+                data?.getParcelableExtra<PendingIntent>("pi")
+                // targetPackage has been renamed creatorPackage after SDK 17
+            }?.targetPackage?.let {
+                Log.d(TAG, "Using distributor $it.")
                 val store = Store(activity).apply {
-                    saveDistributor(application)
-                    this.authToken = authToken
+                    saveDistributor(it)
                     distributorAck = true
                 }
                 UnifiedPush.registerEveryUnAckApp(activity, store)
                 return true
-            } else {
-                Log.d(TAG, "Unexpected null extra")
+            } ?: run {
+                Log.d(TAG, "Could not find creator of pending intent")
+                return false
             }
-            return false
         } else {
             Log.d(TAG, "The deep link hasn't been proceeded. isRequestCodeMatching=$isRequestCodeMatching isResultCodeOK=$isResultCodeOK")
             return false

@@ -1,6 +1,8 @@
 package org.unifiedpush.android.connector
 
 import android.app.Activity
+import android.app.BroadcastOptions
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -184,6 +186,8 @@ object UnifiedPush {
      * @param [vapid] VAPID public key ([RFC8292](https://www.rfc-editor.org/rfc/rfc8292)) base64url encoded of the uncompressed form (87 chars long)
      * @param [encrypted] If push message decryption is to be supported by the library (default=true)
      *
+     * @throws [VapidNotValidException] if [vapid] is not in the in the uncompressed form and base64url encoded
+     *
      * @return A [PublicKeySet] if the decryption of the messages is handled by the library (default)
      */
     @JvmStatic
@@ -191,8 +195,7 @@ object UnifiedPush {
         context: Context,
         instance: String = INSTANCE_DEFAULT,
         messageForDistributor: String? = null,
-        vapid: String? = null,
-        encrypted: Boolean = true
+        vapid: String? = null
     ) : PublicKeySet? {
         val store = Store(context)
         return registerApp(
@@ -201,68 +204,22 @@ object UnifiedPush {
             store.registrationSet.newOrUpdate(
                 instance,
                 messageForDistributor,
-                vapid,
-                encrypted,
-                store.getEventCountAndIncrement(),
+                vapid
             )
         )
     }
 
     @JvmStatic
-    internal fun registerApp(
+    @Throws(VapidNotValidException::class)
+    private fun registerApp(
         context: Context,
         store: Store,
         registration: Registration
     ) : PublicKeySet? {
-
         val distributor = store.tryGetDistributor() ?: run {
             broadcastLocalRegistrationFailed(context, store, registration.instance, FailedReason.DISTRIBUTOR_NOT_SAVED)
             return null
         }
-        val legacy = store.legacyDistributor
-
-        if (legacy) {
-            // We check if the distributor has been upgraded fo follow the new specs
-            if (!isLegacyDistributor(context, distributor)) {
-                // The distributor has been upgraded
-                store.legacyDistributor = false
-                store.distributorAck = false
-                broadcastLink(context, store, distributor)
-                registerAppv3(context, store, registration)
-            }
-            registerAppv2(context, store, registration)
-        } else {
-            registerAppv3(context, store, registration)
-        }
-        return registration.webPushKeys?.publicKeySet
-    }
-
-    @JvmStatic
-    private fun registerAppv2(context: Context, store: Store, registration: Registration) {
-
-        // If it is empty, then the distributor has been uninstalled
-        // getDistributor sends UNREGISTERED locally
-        val distributor = getDistributor(context, store, false) ?: run {
-            broadcastLocalRegistrationFailed(context, store, registration.instance, FailedReason.DISTRIBUTOR_NOT_SAVED)
-            return
-        }
-        val broadcastIntent = Intent().apply {
-            `package` = distributor
-            action = ACTION_REGISTER
-            putExtra(EXTRA_TOKEN, registration.token)
-            // For compatibility with AND_2
-            putExtra(EXTRA_FEATURES, arrayOf(FEATURE_BYTES_MESSAGE))
-            putExtra(EXTRA_APPLICATION, context.packageName)
-            registration.messageForDistributor?.let {
-                putExtra(EXTRA_MESSAGE_FOR_DISTRIB, it)
-            }
-        }
-        context.sendBroadcast(broadcastIntent)
-    }
-
-    @JvmStatic
-    @Throws(VapidNotValidException::class)
-    private fun registerAppv3(context: Context, store: Store, registration: Registration) {
         registration.vapid?.let {
             // This is mainly to catch VAPID used with the wrong format,
             // no need to check if this is a real vapid key
@@ -271,26 +228,20 @@ object UnifiedPush {
             }
         }
 
-        // Here we want to be sure the distributor is still installed
-        // or we return => we use getDistributor and not the store directly
-        // It doesn't have to be ack yet, because it is
-
-        // If the distributor is uninstalled, getDistributor sends UNREGISTERED locally
-        val distributor = getDistributor(context, store, false) ?: run {
-            broadcastLocalRegistrationFailed(context, store, registration.instance, FailedReason.DISTRIBUTOR_NOT_SAVED)
-            return
-        }
-        // If the auth token is empty, it means the LINKED response hasn't been received yet.
-        // The registration request is saved already, and the registration will be send when
-        // the LINKED is received.
-        val auth = store.authToken ?: return
+        // For SDK < 34
+        val dummyIntent = Intent("org.unifiedpush.dummy_app")
+        val pi = PendingIntent.getBroadcast(context, 0, dummyIntent, PendingIntent.FLAG_IMMUTABLE)
 
         val broadcastIntent = Intent().apply {
             `package` = distributor
             action = ACTION_REGISTER
             putExtra(EXTRA_TOKEN, registration.token)
-            putExtra(EXTRA_AUTH_TOKEN, auth)
+            // For compatibility with AND_2
+            putExtra(EXTRA_FEATURES, arrayOf(FEATURE_BYTES_MESSAGE))
+            // For compatibility with AND_2, replaced by pi for SDK < 34
             putExtra(EXTRA_APPLICATION, context.packageName)
+            // For SDK < 34
+            putExtra(EXTRA_PI, pi)
             registration.messageForDistributor?.let {
                 putExtra(EXTRA_MESSAGE_FOR_DISTRIB, it)
             }
@@ -298,7 +249,13 @@ object UnifiedPush {
                 putExtra(EXTRA_VAPID, it)
             }
         }
-        context.sendBroadcast(broadcastIntent)
+        if (Build.VERSION.SDK_INT >= 34) {
+            val broadcastOptions = BroadcastOptions.makeBasic().setShareIdentityEnabled(true)
+            context.sendBroadcast(broadcastIntent, null, broadcastOptions.toBundle())
+        } else {
+            context.sendBroadcast(broadcastIntent)
+        }
+        return registration.webPushKeys?.publicKeySet
     }
 
     /**
@@ -397,11 +354,6 @@ object UnifiedPush {
                 ).filter {
                 it.activityInfo.exported || it.activityInfo.packageName == context.packageName
             }
-    }
-
-    @JvmStatic
-    private fun isLegacyDistributor(context: Context, packageName: String): Boolean {
-        return getResolveInfo(context, ACTION_LINK, packageName).none()
     }
 
     /**
@@ -519,16 +471,6 @@ object UnifiedPush {
             store.distributorAck = false
             store.saveDistributor(distributor)
         }
-
-        // If it supports AND_3
-        if (!isLegacyDistributor(context, distributor)) {
-            Log.d(TAG, "Saving distributor $distributor")
-            store.legacyDistributor = false
-            broadcastLink(context, store, distributor)
-        } else {
-            Log.d(TAG, "Saving legacy distributor $distributor")
-            store.legacyDistributor = true
-        }
     }
     /**
      * Get the distributor registered by the user, but the
@@ -565,19 +507,6 @@ object UnifiedPush {
                 null
             }
         }
-    }
-
-    @JvmStatic
-    internal fun broadcastLink(context: Context, store: Store, distributor: String) {
-        // It must send REGISTRATION_FAILED with ACTION_REQUIRED
-        store.lastLinkRequest = store.getEventCountAndIncrement()
-        val tempToken = store.newLinkToken()
-        val broadcastIntent = Intent().apply {
-            `package` = distributor
-            action = ACTION_LINK
-            putExtra(EXTRA_LINK_TOKEN, tempToken)
-        }
-        context.sendBroadcast(broadcastIntent)
     }
 
     @JvmStatic
