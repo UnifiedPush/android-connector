@@ -3,6 +3,7 @@ package org.unifiedpush.android.connector
 import android.app.Activity
 import android.app.Activity.RESULT_OK
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -54,10 +55,8 @@ class LinkActivityHelper(private val activity: Activity) {
         val intent = Intent(Intent.ACTION_VIEW).apply {
             data = Uri.parse("unifiedpush://link")
         }
-        val pm = activity.packageManager
-        val resolveInfo = pm.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
-        resolveInfo?.let {
-            Log.d(TAG, "Found activity for ${it.activityInfo.packageName} default=${it.activityInfo.packageName != "android"}")
+        resolveLinkActivityPackageName(activity, intent)?.let {
+            Log.d(TAG, "Found activity for $it default=${it != "android"}")
             activity.startActivityForResult(intent, gRequestCode)
             return true
         } ?: run {
@@ -96,6 +95,27 @@ class LinkActivityHelper(private val activity: Activity) {
         } else {
             Log.d(TAG, "The deep link hasn't been proceeded. isRequestCodeMatching=$isRequestCodeMatching isResultCodeOK=$isResultCodeOK")
             return false
+        }
+    }
+
+    companion object {
+        /**
+         * Resolve the package name of the application able to open `unifiedpush://link`
+         *
+         * @param [context] [Context] to request the package manager
+         * @param [intent] [Intent] to pass an intent, else it creates one
+         *
+         * @return `null` if no application is able to open the link,
+         * "android" if the system must ask what application should open the link,
+         * or the package name of the only, or default, application which can open the link.
+         */
+        internal fun resolveLinkActivityPackageName(context: Context, intent: Intent? = null): String? {
+            val lIntent = intent ?: Intent(Intent.ACTION_VIEW).apply {
+                data = Uri.parse("unifiedpush://link")
+            }
+            val pm = context.packageManager
+            val resolveInfo = pm.resolveActivity(lIntent, PackageManager.MATCH_DEFAULT_ONLY)
+            return resolveInfo?.activityInfo?.packageName
         }
     }
 }
