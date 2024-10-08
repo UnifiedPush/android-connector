@@ -175,14 +175,15 @@ object UnifiedPush {
     /**
      * Request a new registration for the [instance] to the saved distributor.
      *
-     * [saveDistributor] must be called before this function. Else [MessagingReceiver.onRegistrationFailed] will be called with the reason [FailedReason.DISTRIBUTOR_NOT_SAVED].
+     * [saveDistributor] must be called before this function.
      *
      * If there was a distributor but it has been removed, [MessagingReceiver.onUnregistered] will be called for all subscribed instances.
      *
+     * @param [context] To interact with the shared preferences and send broadcast intents.
      * @param [instance] Registration instance. Can be used to get multiple registrations, eg. for multi-account support.
-     * @param [messageForDistributor] May be shown by the distributor UI to identify this registration
-     * @param [vapid] VAPID public key ([RFC8292](https://www.rfc-editor.org/rfc/rfc8292)) base64url encoded of the uncompressed form (87 chars long)
-     * @param [encrypted] If push message decryption is to be supported by the library (default=true)
+     * @param [messageForDistributor] May be shown by the distributor UI to identify this registration.
+     * @param [vapid] VAPID public key ([RFC8292](https://www.rfc-editor.org/rfc/rfc8292)) base64url encoded of the uncompressed form (87 chars long).
+     * @param [encrypted] If push message decryption is to be supported by the library (default=true).
      *
      * @throws [VapidNotValidException] if [vapid] is not in the in the uncompressed form and base64url encoded.
      */
@@ -212,10 +213,7 @@ object UnifiedPush {
         store: Store,
         registration: Registration
     ) {
-        val distributor = store.tryGetDistributor() ?: run {
-            broadcastLocalRegistrationFailed(context, store, registration.instance, FailedReason.DISTRIBUTOR_NOT_SAVED)
-            return null
-        }
+        val distributor = getDistributor(context, store, false) ?: return
         registration.vapid?.let {
             // This is mainly to catch VAPID used with the wrong format,
             // no need to check if this is a real vapid key
@@ -281,7 +279,8 @@ object UnifiedPush {
     @JvmStatic
     fun unregisterApp(context: Context, instance: String = INSTANCE_DEFAULT) {
         val store = Store(context)
-        val distributor = getSavedDistributor(context) ?: run {
+        val distributor = getDistributor(context, store, false) ?: run {
+            // This should not be necessary
             store.registrationSet.removeInstances()
             store.removeDistributor()
             return
@@ -492,6 +491,16 @@ object UnifiedPush {
     @JvmStatic
     fun getAckDistributor(context: Context): String? = getDistributor(context, Store(context), true)
 
+    /**
+     * Get the current distributor.
+     *
+     * Send [ACTION_UNREGISTERED] for all instances if the distributor in [Store.tryGetDistributor]
+     * is not installed anymore.
+     *
+     * @param [context] [Context] to interact with package manager.
+     * @param [store] [Store] to access our shared preferences.
+     * @param [ack] `true` if the distributor has to be ack.
+     */
     @JvmStatic
     private fun getDistributor(context: Context, store: Store, ack: Boolean): String? {
         if (ack && !store.distributorAck) {
