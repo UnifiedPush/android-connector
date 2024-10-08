@@ -10,7 +10,6 @@ internal class Registration(
     var vapid: String?,
     val webPushKeys: WebPushKeys?,
     val ack: Boolean,
-    val eventCount: Int,
     ) {
 
     companion object {
@@ -23,10 +22,9 @@ internal class Registration(
             val token = preferences.getString(PREF_CONNECTOR_TOKEN.format(instance), null) ?: return null
             val message = preferences.getString(PREF_CONNECTOR_MESSAGE.format(instance), null)
             val vapid = preferences.getString(PREF_CONNECTOR_VAPID.format(instance), null)
-            val eventCount = preferences.getInt(PREF_CONNECTOR_EVENT_COUNT.format(instance), -1)
             val webPushKeys = tryGetWebPushKeys(preferences, instance)
             val ack = preferences.getBoolean(PREF_CONNECTOR_ACK.format(instance), false)
-            return Registration(instance, token, message, vapid, webPushKeys, ack, eventCount)
+            return Registration(instance, token, message, vapid, webPushKeys, ack)
         }
 
         internal fun tryGetWebPushKeys(preferences: SharedPreferences, instance: String): WebPushKeys? {
@@ -58,7 +56,7 @@ internal class Registration(
             )
         }
 
-        internal fun newOrUpdate(preferences: SharedPreferences, instance: String, messageForDistributor: String?, vapid: String?, encrypted: Boolean, eventCount: Int): Registration {
+        internal fun newOrUpdate(preferences: SharedPreferences, instance: String, messageForDistributor: String?, vapid: String?): Registration {
             val instances = preferences.getStringSet(PREF_MASTER_INSTANCES, null)?.toMutableSet()
                 ?: emptySet<String>().toMutableSet()
             var token = preferences.getString(PREF_CONNECTOR_TOKEN.format(instance), null)
@@ -79,11 +77,10 @@ internal class Registration(
                 vapid?.let {
                     putString(PREF_CONNECTOR_VAPID.format(instance), it)
                 }
-                putInt(PREF_CONNECTOR_EVENT_COUNT.format(instance), eventCount)
                 apply()
             }
             val webPushKeys = tryGetWebPushKeys(preferences, instance) ?: newWebPushKeys(preferences, instance)
-            return Registration(instance, token!!, messageForDistributor, vapid, webPushKeys, false, eventCount)
+            return Registration(instance, token!!, messageForDistributor, vapid, webPushKeys, false)
         }
     }
 }

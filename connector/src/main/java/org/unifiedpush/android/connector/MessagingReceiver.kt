@@ -97,7 +97,6 @@ import java.security.interfaces.ECPublicKey
  * ```xml
  * <receiver android:exported="true"  android:enabled="true"  android:name=".CustomReceiver">
  *     <intent-filter>
- *         <action android:name="org.unifiedpush.android.connector.LINKED"/>
  *         <action android:name="org.unifiedpush.android.connector.MESSAGE"/>
  *         <action android:name="org.unifiedpush.android.connector.UNREGISTERED"/>
  *         <action android:name="org.unifiedpush.android.connector.NEW_ENDPOINT"/>
@@ -135,16 +134,6 @@ open class MessagingReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val token = intent.getStringExtra(EXTRA_TOKEN)
         val store = Store(context)
-        // For the linked request, we use a temporary token,
-        // which is different from connection tokens
-        if (intent.action == ACTION_LINKED
-            && intent.getStringExtra(EXTRA_LINK_TOKEN) == store.linkToken) {
-            store.authToken = intent.getStringExtra(EXTRA_AUTH_TOKEN) ?: return
-            store.distributorAck = true
-            // Every registration that hasn't been acknowledge has been sent before LINKED was received
-            UnifiedPush.registerEveryUnAckApp(context, store)
-            return
-        }
         val instance = token?.let {
             store.registrationSet.tryGetInstance(it)
         } ?: return
@@ -167,40 +156,7 @@ open class MessagingReceiver : BroadcastReceiver() {
             ACTION_REGISTRATION_FAILED -> {
                 val reason = intent.getStringExtra(EXTRA_REASON).toFailedReason()
                 Log.i(TAG, "Failed: $reason")
-                if (reason == FailedReason.UNAUTH) {
-                    // What if REGISTER was send after LINK is sent and before LINKED is received ?
-                    // -> REGISTER is never send if Ack = false. `registerApp` sends LINK first
-                    // and save the registration. Once LINKED is received, it sends the REGISTER
-                    // intent to the distributor.
-                    // -> The only reason why we could receive an UNAUTH is
-                    // because we had Ack = true, but the distributor did not
-                    // know the token anymore (eg. its data has been wiped)
-                    // -> but if there were many REGISTER intent, we had Ack = true, and we receive
-                    // UNAUTH, so in reality this is Ack = false
-                    // => therefore, we NEED to know last LINK event and register event
-                    // It must be monolithic increased, we use an event count
-                    store.registrationSet.ack(instance, false)
-                    if (store.registrationSet.getEventCount(instance) > store.lastLinkRequest) {
-                        // This registration request is more recent than the last LINK request,
-                        // the distributor has probably been reinstalled
-                        // we send a new LINK request
-                        store.distributorAck = false
-                        store.authToken = null
-                        store.tryGetDistributor()?.let { distributor ->
-                            UnifiedPush.broadcastLink(context, store, distributor)
-                        }
-                    } else if (store.distributorAck) {
-                        // We have received the new LINKED response, we can register directly
-                        store.registrationSet.tryGetRegistration(instance)?.let { reg ->
-                            store.tryGetDistributor()?.let {
-                                UnifiedPush.registerApp(context, store, reg)
-                            }
-                        }
-                    }
-                    // else, `registerApp` will be send during next LINKED
-                } else {
-                    store.registrationSet.removeInstance(instance)
-                }
+                store.registrationSet.removeInstance(instance)
                 onRegistrationFailed(context, reason, instance)
             }
             ACTION_UNREGISTERED -> {

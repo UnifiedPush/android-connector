@@ -28,33 +28,19 @@ internal class RegistrationSet(private val preferences: SharedPreferences) {
         }
     }
 
-    internal fun getEventCount(instance: String): Int {
-        return synchronized(registrationLock) {
-            preferences.getInt(PREF_CONNECTOR_EVENT_COUNT.format(instance), -1)
-        }
-    }
-
     internal fun ack(instance: String, ack: Boolean) {
         return synchronized(registrationLock) {
             preferences.edit().putBoolean(PREF_CONNECTOR_ACK.format(instance), ack).apply()
         }
     }
 
-    internal fun setEventCount(instance: String, count: Int) {
-        return synchronized(registrationLock) {
-            preferences.edit().putInt(PREF_CONNECTOR_EVENT_COUNT.format(instance), count).apply()
-        }
-    }
-    
     internal fun newOrUpdate(
         instance: String,
         messageForDistributor: String?,
-        vapid: String?,
-        encrypted: Boolean,
-        eventCount: Int
+        vapid: String?
     ): Registration {
         return synchronized(registrationLock) {
-            Registration.newOrUpdate(preferences, instance, messageForDistributor, vapid, encrypted, eventCount)
+            Registration.newOrUpdate(preferences, instance, messageForDistributor, vapid)
         }
     }
 
@@ -67,12 +53,6 @@ internal class RegistrationSet(private val preferences: SharedPreferences) {
             }
         }
         return null
-    }
-
-    internal fun isAnyInstance(): Boolean {
-        return synchronized(registrationLock) {
-            preferences.getStringSet(PREF_MASTER_INSTANCES, null) != null
-        }
     }
 
     /**
@@ -92,7 +72,6 @@ internal class RegistrationSet(private val preferences: SharedPreferences) {
                 .remove(PREF_CONNECTOR_PUBKEY.format(instance))
                 .remove(PREF_CONNECTOR_PRIVKEY.format(instance))
                 .remove(PREF_CONNECTOR_AUTH.format(instance))
-                .remove(PREF_CONNECTOR_EVENT_COUNT.format(instance))
                 .apply()
             return instances
         }
@@ -109,7 +88,6 @@ internal class RegistrationSet(private val preferences: SharedPreferences) {
                     .remove(PREF_CONNECTOR_PRIVKEY.format(instance))
                     .remove(PREF_CONNECTOR_AUTH.format(instance))
                     .remove(PREF_CONNECTOR_ACK.format(instance))
-                    .remove(PREF_CONNECTOR_EVENT_COUNT.format(instance))
                     .apply()
             }
             preferences.edit().remove(PREF_MASTER_INSTANCES).apply()
