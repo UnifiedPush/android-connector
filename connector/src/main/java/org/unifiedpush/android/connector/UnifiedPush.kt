@@ -10,7 +10,6 @@ import android.content.pm.ResolveInfo
 import android.os.Build
 import android.util.AndroidException
 import android.util.Log
-import org.unifiedpush.android.connector.data.PublicKeySet
 import kotlin.jvm.Throws
 
 /**
@@ -185,9 +184,7 @@ object UnifiedPush {
      * @param [vapid] VAPID public key ([RFC8292](https://www.rfc-editor.org/rfc/rfc8292)) base64url encoded of the uncompressed form (87 chars long)
      * @param [encrypted] If push message decryption is to be supported by the library (default=true)
      *
-     * @throws [VapidNotValidException] if [vapid] is not in the in the uncompressed form and base64url encoded
-     *
-     * @return A [PublicKeySet] if the decryption of the messages is handled by the library (default)
+     * @throws [VapidNotValidException] if [vapid] is not in the in the uncompressed form and base64url encoded.
      */
     @JvmStatic
     fun registerApp(
@@ -195,9 +192,9 @@ object UnifiedPush {
         instance: String = INSTANCE_DEFAULT,
         messageForDistributor: String? = null,
         vapid: String? = null
-    ) : PublicKeySet? {
+    ) {
         val store = Store(context)
-        return registerApp(
+        registerApp(
             context,
             store,
             store.registrationSet.newOrUpdate(
@@ -214,7 +211,7 @@ object UnifiedPush {
         context: Context,
         store: Store,
         registration: Registration
-    ) : PublicKeySet? {
+    ) {
         val distributor = store.tryGetDistributor() ?: run {
             broadcastLocalRegistrationFailed(context, store, registration.instance, FailedReason.DISTRIBUTOR_NOT_SAVED)
             return null
@@ -254,7 +251,6 @@ object UnifiedPush {
         } else {
             context.sendBroadcast(broadcastIntent)
         }
-        return registration.webPushKeys?.publicKeySet
     }
 
     /**
