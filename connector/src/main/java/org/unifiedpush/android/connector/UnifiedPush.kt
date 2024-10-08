@@ -79,8 +79,7 @@ import kotlin.jvm.Throws
  *             context,
  *             INSTANCE_DEFAULT,
  *             messageForDistributor,
- *             vapid,
- *             true
+ *             vapid
  *         );
  *     }
  * });
@@ -152,8 +151,7 @@ import kotlin.jvm.Throws
  *     context,
  *     INSTANCE_DEFAULT,
  *     messageForDistributor,
- *     vapid,
- *     true
+ *     vapid
  * );
  * ```
  *
