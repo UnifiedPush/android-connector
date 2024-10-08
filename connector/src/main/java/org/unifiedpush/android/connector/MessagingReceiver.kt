@@ -130,7 +130,7 @@ open class MessagingReceiver : BroadcastReceiver() {
     open fun onMessage(context: Context, message: ByteArray, instance: String) {}
 
     /**
-     * Handle UnifiedPush messages, should not be overriden
+     * Handle UnifiedPush messages, should not be override
      */
     override fun onReceive(context: Context, intent: Intent) {
         val token = intent.getStringExtra(EXTRA_TOKEN)
@@ -178,7 +178,7 @@ open class MessagingReceiver : BroadcastReceiver() {
                     // -> but if there were many REGISTER intent, we had Ack = true, and we receive
                     // UNAUTH, so in reality this is Ack = false
                     // => therefore, we NEED to know last LINK event and register event
-                    // It must be monolithically increased, we use an event count
+                    // It must be monolithic increased, we use an event count
                     store.registrationSet.ack(instance, false)
                     if (store.registrationSet.getEventCount(instance) > store.lastLinkRequest) {
                         // This registration request is more recent than the last LINK request,
