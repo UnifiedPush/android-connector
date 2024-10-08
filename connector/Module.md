@@ -101,7 +101,6 @@ The receiver has to be exposed in the `AndroidManifest.xml` in order to receive 
 ```xml
       <receiver android:exported="true"  android:enabled="true"  android:name=".CustomReceiver">
           <intent-filter>
-              <action android:name="org.unifiedpush.android.connector.LINKED"/>
               <action android:name="org.unifiedpush.android.connector.MESSAGE"/>
               <action android:name="org.unifiedpush.android.connector.UNREGISTERED"/>
               <action android:name="org.unifiedpush.android.connector.NEW_ENDPOINT"/>
@@ -177,8 +176,7 @@ UnifiedPush.tryUseCurrentOrDefaultDistributor(context, success ->{
             context,
             INSTANCE_DEFAULT,
             messageForDistributor,
-            vapid,
-            true
+            vapid
         );
     }
 });
@@ -250,8 +248,7 @@ UnifiedPush.registerApp(
     context,
     INSTANCE_DEFAULT,
     messageForDistributor,
-    vapid,
-    true
+    vapid
 );
 ```
 
