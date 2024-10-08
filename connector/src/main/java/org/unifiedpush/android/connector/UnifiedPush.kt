@@ -395,11 +395,18 @@ object UnifiedPush {
     @JvmStatic
     fun tryUseDefaultDistributor(context: Context, callback: (Boolean) -> Unit) {
         if (context is Activity) {
-            LinkActivity.callback = callback
-            val intent = Intent().apply {
-                setClassName(context.packageName, LinkActivity::class.java.name)
+            LinkActivityHelper.resolveLinkActivityPackageName(context)?.let {
+                if (it == "android") {
+                    LinkActivity.callback = callback
+                    val intent = Intent().apply {
+                        setClassName(context.packageName, LinkActivity::class.java.name)
+                    }
+                    context.startActivity(intent)
+                } else {
+                    saveDistributor(context, it)
+                    callback(true)
+                }
             }
-            context.startActivity(intent)
         } else {
             callback(false)
         }
