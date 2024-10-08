@@ -4,20 +4,12 @@ package org.unifiedpush.android.connector
 
 import android.util.Base64
 import com.google.crypto.tink.subtle.EllipticCurves
+import org.unifiedpush.android.connector.data.PublicKeySet
 import java.security.*
 import java.security.interfaces.ECPublicKey
 import java.security.spec.ECGenParameterSpec
 import java.security.spec.ECPublicKeySpec
 import java.security.spec.PKCS8EncodedKeySpec
-
-/**
- * Contains Web Push (public) keys information necessary for the application server
- * to encrypt notification for this instance, following [RFC8291](https://www.rfc-editor.org/rfc/rfc8291)
- */
-class PublicKeySet(
-    val pubKey: String,
-    val auth: String,
-)
 
 /**
  * Contains Web Push keys information necessary to decrypt the messages

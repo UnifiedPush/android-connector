@@ -1,6 +1,7 @@
 package org.unifiedpush.android.connector
 
 import android.content.SharedPreferences
+import org.unifiedpush.android.connector.data.PublicKeySet
 
 internal class RegistrationSet(private val preferences: SharedPreferences) {
 
