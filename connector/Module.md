@@ -35,11 +35,11 @@ You need to expose a receiver that extend [`MessagingReceiver`][org.unifiedpush.
 
 ```kotlin
 class CustomReceiver: MessagingReceiver() {
-    override fun onMessage(context: Context, message: ByteArray, instance: String) {
+    override fun onMessage(context: Context, message: PushMessage, instance: String) {
         // TODO: handle message, eg. to sync remote data or show a notification to the user
     }
 
-    override fun onNewEndpoint(context: Context, endpoint: String, instance: String) {
+    override fun onNewEndpoint(context: Context, endpoint: PushEndpoint, instance: String) {
         // TODO: send new endpoint to the app server
     }
 
@@ -67,12 +67,12 @@ class CustomReceiver extends MessagingReceiver {
     }
 
     @Override
-    public void onMessage(@NotNull Context context, @NotNull byte[] message, @NotNull String instance) {
+    public void onMessage(@NotNull Context context, @NotNull PushMessage message, @NotNull String instance) {
         // TODO: handle message, eg. to sync remote data or show a notification to the user
     }
 
     @Override
-    public void onNewEndpoint(@NotNull Context context, @NotNull String endpoint, @NotNull String instance) {
+    public void onNewEndpoint(@NotNull Context context, @NotNull PushEndpoint endpoint, @NotNull String instance) {
         // TODO: send new endpoint to the app server
     }
 

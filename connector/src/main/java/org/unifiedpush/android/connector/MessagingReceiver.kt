@@ -6,6 +6,8 @@ import android.content.Intent
 import android.os.PowerManager
 import android.util.Log
 import com.google.crypto.tink.apps.webpush.WebPushHybridDecrypt
+import org.unifiedpush.android.connector.data.PushEndpoint
+import org.unifiedpush.android.connector.data.PushMessage
 import java.security.GeneralSecurityException
 import java.security.interfaces.ECPrivateKey
 import java.security.interfaces.ECPublicKey
@@ -31,11 +33,11 @@ import java.security.interfaces.ECPublicKey
  *
  * ```kotlin
  * class CustomReceiver: MessagingReceiver() {
- *     override fun onMessage(context: Context, message: ByteArray, instance: String) {
+ *     override fun onMessage(context: Context, message: PushMessage, instance: String) {
  *         // TODO: handle message, eg. to sync remote data or show a notification to the user
  *     }
  *
- *     override fun onNewEndpoint(context: Context, endpoint: String, instance: String) {
+ *     override fun onNewEndpoint(context: Context, endpoint: PushEndpoint, instance: String) {
  *         // TODO: send new endpoint to the app server
  *     }
  *
@@ -63,12 +65,12 @@ import java.security.interfaces.ECPublicKey
  *     }
  *
  *     @Override
- *     public void onMessage(@NotNull Context context, @NotNull byte[] message, @NotNull String instance) {
+ *     public void onMessage(@NotNull Context context, @NotNull PushMessage message, @NotNull String instance) {
  *         // TODO: handle message, eg. to sync remote data or show a notification to the user
  *     }
  *
  *     @Override
- *     public void onNewEndpoint(@NotNull Context context, @NotNull String endpoint, @NotNull String instance) {
+ *     public void onNewEndpoint(@NotNull Context context, @NotNull PushEndpoint endpoint, @NotNull String instance) {
  *         // TODO: send new endpoint to the app server
  *     }
  *
@@ -112,7 +114,7 @@ open class MessagingReceiver : BroadcastReceiver() {
      * should be send to the application server, and the app should sync for
      * missing notifications.
      */
-    open fun onNewEndpoint(context: Context, endpoint: String, instance: String) {}
+    open fun onNewEndpoint(context: Context, endpoint: PushEndpoint, instance: String) {}
     /**
      * The registration is not possible, eg. no network, depending on the reason,
      * you can try to register again directly.
@@ -126,7 +128,7 @@ open class MessagingReceiver : BroadcastReceiver() {
      * A new message is received. The message contains the decrypted content of the push message
      * for the instance
      */
-    open fun onMessage(context: Context, message: ByteArray, instance: String) {}
+    open fun onMessage(context: Context, message: PushMessage, instance: String) {}
 
     /**
      * Handle UnifiedPush messages, should not be override
@@ -146,9 +148,10 @@ open class MessagingReceiver : BroadcastReceiver() {
             ACTION_NEW_ENDPOINT -> {
                 val endpoint = intent.getStringExtra(EXTRA_ENDPOINT) ?: return
                 val id = intent.getStringExtra(EXTRA_MESSAGE_ID)
+                val pubKeys = store.registrationSet.tryGetPublicKeySet(instance)
                 store.distributorAck = true
                 store.registrationSet.ack(instance, true)
-                onNewEndpoint(context, endpoint, instance)
+                onNewEndpoint(context, PushEndpoint(endpoint, pubKeys), instance)
                 store.tryGetDistributor()?.let {
                     mayAcknowledgeMessage(context, it, id, token)
                 }
@@ -177,12 +180,12 @@ open class MessagingReceiver : BroadcastReceiver() {
                                 .withRecipientPrivateKey(wp.keyPair.private as ECPrivateKey)
                                 .build()
                         val clearMessage = hybridDecrypt.decrypt(message, null)
-                        onMessage(context, clearMessage, instance)
+                        onMessage(context, PushMessage(clearMessage, true), instance)
                     } catch (e: GeneralSecurityException) {
                         Log.w(TAG, "Could not decrypt message, trying with plain text. Cause: ${e.message}")
-                        onMessage(context, message, instance)
+                        onMessage(context, PushMessage(message, false), instance)
                     }
-                } ?: onMessage(context, message, instance)
+                } ?: onMessage(context, PushMessage(message, false), instance)
                 store.tryGetDistributor()?.let {
                     mayAcknowledgeMessage(context, it, id, token)
                 }
