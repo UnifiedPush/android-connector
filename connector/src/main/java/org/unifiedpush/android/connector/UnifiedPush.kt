@@ -6,7 +6,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.os.Build
+import android.util.AndroidException
 import android.util.Log
+import kotlin.jvm.Throws
 
 /**
  * Object containing functions to interact with the distributor
@@ -167,6 +169,9 @@ object UnifiedPush {
     // For compatibility purpose with AND_2
     private const val FEATURE_BYTES_MESSAGE = "org.unifiedpush.android.distributor.feature.BYTES_MESSAGE"
 
+    @JvmStatic
+    private val VAPID_REGEX = Regex("^[A-Za-z0-9_-]{87}$")
+
     /**
      * Request a new registration for the [instance] to the saved distributor.
      *
@@ -256,8 +261,15 @@ object UnifiedPush {
     }
 
     @JvmStatic
+    @Throws(VapidNotValidException::class)
     private fun registerAppv3(context: Context, store: Store, registration: Registration) {
-        //TODO check vapid format
+        registration.vapid?.let {
+            // This is mainly to catch VAPID used with the wrong format,
+            // no need to check if this is a real vapid key
+            if (!VAPID_REGEX.matches(it)) {
+                throw VapidNotValidException()
+            }
+        }
 
         // Here we want to be sure the distributor is still installed
         // or we return => we use getDistributor and not the store directly
@@ -623,4 +635,6 @@ object UnifiedPush {
         store.registrationSet.removeInstances()
         store.removeDistributor()
     }
+
+    class VapidNotValidException: AndroidException()
 }
