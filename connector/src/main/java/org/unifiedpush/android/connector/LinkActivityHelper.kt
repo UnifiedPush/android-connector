@@ -98,9 +98,12 @@ class LinkActivityHelper(private val activity: Activity) {
         }
     }
 
-    companion object {
+    internal companion object {
         /**
          * Resolve the package name of the application able to open `unifiedpush://link`
+         *
+         * Do not use this function to use the default distributor,
+         * call the exposed [tryUseDefaultDistributor][org.unifiedpush.android.connector.UnifiedPush.tryUseDefaultDistributor] function.
          *
          * @param [context] [Context] to request the package manager
          * @param [intent] [Intent] to pass an intent, else it creates one
