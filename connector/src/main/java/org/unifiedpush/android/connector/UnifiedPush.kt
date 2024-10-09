@@ -578,5 +578,10 @@ object UnifiedPush {
         store.removeDistributor()
     }
 
+    /**
+     * The VAPID public key is not in the right format.
+     *
+     * It should be in the uncompressed form, and base64url encoded (87 chars long)
+     */
     class VapidNotValidException: AndroidException()
 }
