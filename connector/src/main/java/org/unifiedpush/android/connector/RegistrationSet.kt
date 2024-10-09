@@ -11,12 +11,6 @@ internal class RegistrationSet(private val preferences: SharedPreferences) {
         }
     }
 
-    internal fun tryGetRegistration(instance: String): Registration? {
-        return synchronized(registrationLock) {
-            Registration.tryGetFromInstance(preferences, instance)
-        }
-    }
-
     internal fun tryGetWebPushKeys(instance: String): WebPushKeys? {
         return synchronized(registrationLock) {
             Registration.tryGetWebPushKeys(preferences, instance)
