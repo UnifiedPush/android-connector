@@ -88,14 +88,6 @@ internal class RegistrationSet(private val preferences: SharedPreferences) {
         }
     }
 
-    internal fun forEachRegistration(block: (registration: Registration) -> Unit) {
-        forEachInstance { instance ->
-            Registration.tryGetFromInstance(preferences, instance)?.let {
-                block(it)
-            }
-        }
-    }
-
     companion object {
         private val registrationLock = Object()
     }

@@ -514,18 +514,6 @@ object UnifiedPush {
     }
 
     @JvmStatic
-    private fun broadcastLocalRegistrationFailed(context: Context, store: Store, instance: String, reason: FailedReason) {
-        val token = store.registrationSet.tryGetToken(instance) ?: return
-        val broadcastIntent = Intent().apply {
-            `package` = context.packageName
-            action = ACTION_REGISTRATION_FAILED
-            putExtra(EXTRA_TOKEN, token)
-            putExtra(EXTRA_REASON, reason.toString())
-        }
-        context.sendBroadcast(broadcastIntent)
-    }
-
-    @JvmStatic
     private fun hasEmbeddedFcmDistributor(context: Context): Boolean {
         val packageInfo = context.packageManager.getPackageInfo(context.packageName, PackageManager.GET_SERVICES + PackageManager.GET_RECEIVERS)
         return packageInfo.services?.map { it.name }
