@@ -23,12 +23,6 @@ internal class RegistrationSet(private val preferences: SharedPreferences) {
         }
     }
 
-    internal fun ack(instance: String, ack: Boolean) {
-        return synchronized(registrationLock) {
-            preferences.edit().putBoolean(PREF_CONNECTOR_ACK.format(instance), ack).apply()
-        }
-    }
-
     internal fun newOrUpdate(
         instance: String,
         messageForDistributor: String?,
@@ -63,7 +57,6 @@ internal class RegistrationSet(private val preferences: SharedPreferences) {
                 .remove(PREF_CONNECTOR_TOKEN.format(instance))
                 .remove(PREF_CONNECTOR_VAPID.format(instance))
                 .remove(PREF_CONNECTOR_MESSAGE.format(instance))
-                .remove(PREF_CONNECTOR_ACK.format(instance))
                 .remove(PREF_CONNECTOR_PUBKEY.format(instance))
                 .remove(PREF_CONNECTOR_PRIVKEY.format(instance))
                 .remove(PREF_CONNECTOR_AUTH.format(instance))
@@ -82,7 +75,6 @@ internal class RegistrationSet(private val preferences: SharedPreferences) {
                     .remove(PREF_CONNECTOR_PUBKEY.format(instance))
                     .remove(PREF_CONNECTOR_PRIVKEY.format(instance))
                     .remove(PREF_CONNECTOR_AUTH.format(instance))
-                    .remove(PREF_CONNECTOR_ACK.format(instance))
                     .apply()
             }
             preferences.edit().remove(PREF_MASTER_INSTANCES).apply()

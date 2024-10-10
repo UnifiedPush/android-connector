@@ -150,7 +150,6 @@ open class MessagingReceiver : BroadcastReceiver() {
                 val id = intent.getStringExtra(EXTRA_MESSAGE_ID)
                 val pubKeys = store.registrationSet.tryGetPublicKeySet(instance)
                 store.distributorAck = true
-                store.registrationSet.ack(instance, true)
                 onNewEndpoint(context, PushEndpoint(endpoint, pubKeys), instance)
                 store.tryGetDistributor()?.let {
                     mayAcknowledgeMessage(context, it, id, token)

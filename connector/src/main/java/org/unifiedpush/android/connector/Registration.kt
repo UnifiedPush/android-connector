@@ -9,7 +9,6 @@ internal class Registration(
     var messageForDistributor: String?,
     var vapid: String?,
     val webPushKeys: WebPushKeys?,
-    val ack: Boolean,
     ) {
 
     companion object {
@@ -23,8 +22,7 @@ internal class Registration(
             val message = preferences.getString(PREF_CONNECTOR_MESSAGE.format(instance), null)
             val vapid = preferences.getString(PREF_CONNECTOR_VAPID.format(instance), null)
             val webPushKeys = tryGetWebPushKeys(preferences, instance)
-            val ack = preferences.getBoolean(PREF_CONNECTOR_ACK.format(instance), false)
-            return Registration(instance, token, message, vapid, webPushKeys, ack)
+            return Registration(instance, token, message, vapid, webPushKeys)
         }
 
         internal fun tryGetWebPushKeys(preferences: SharedPreferences, instance: String): WebPushKeys? {
@@ -69,7 +67,6 @@ internal class Registration(
                 if (token == null) {
                     token = UUID.randomUUID().toString()
                     putString(PREF_CONNECTOR_TOKEN.format(instance), token)
-                    putBoolean(PREF_CONNECTOR_ACK.format(instance), false)
                 }
                 messageForDistributor?.let {
                     putString(PREF_CONNECTOR_MESSAGE.format(instance), it)
@@ -80,7 +77,7 @@ internal class Registration(
                 apply()
             }
             val webPushKeys = tryGetWebPushKeys(preferences, instance) ?: newWebPushKeys(preferences, instance)
-            return Registration(instance, token!!, messageForDistributor, vapid, webPushKeys, false)
+            return Registration(instance, token!!, messageForDistributor, vapid, webPushKeys)
         }
     }
 }

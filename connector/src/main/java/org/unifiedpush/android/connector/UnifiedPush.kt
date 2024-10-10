@@ -252,24 +252,6 @@ object UnifiedPush {
     }
 
     /**
-     * Send registration request for every instances that haven't been ack
-     *
-     * Used when we receive a LINKED, or the result from the link activity
-     */
-    @JvmStatic
-    internal fun registerEveryUnAckApp(context: Context, store: Store) {
-        store.registrationSet.forEachRegistration {
-            if (!it.ack) {
-                registerApp(
-                    context,
-                    store,
-                    it
-                )
-            }
-        }
-    }
-
-    /**
      * Send an unregistration request for the [instance] to the saved distributor and remove the registration. Remove the distributor if this is the last instance registered.
      *
      * [MessagingReceiver.onUnregistered] won't be called after that request.

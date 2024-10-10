@@ -68,8 +68,10 @@ class LinkActivityHelper(private val activity: Activity) {
     /**
      * Process result from the distributor's activity
      *
-     * @return `true` if the [requestCode] matches the one of the request, if the [resultCode]
-     *  is OK, and if the [data] contains the Auth token and the distributor packageName.
+     * You have to call [UnifiedPush.registerApp] for all your registrations if this returns `true`.
+     *
+     * @return `true` if the [requestCode] matches the one of the request and the [resultCode]
+     *  is OK and the [data] contains the PendingIntent to identify the distributor packageName.
      */
     fun onLinkActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
         val isRequestCodeMatching = requestCode == gRequestCode
@@ -86,7 +88,6 @@ class LinkActivityHelper(private val activity: Activity) {
                 val store = Store(activity).apply {
                     saveDistributor(it)
                 }
-                UnifiedPush.registerEveryUnAckApp(activity, store)
                 return true
             } ?: run {
                 Log.d(TAG, "Could not find creator of pending intent")
