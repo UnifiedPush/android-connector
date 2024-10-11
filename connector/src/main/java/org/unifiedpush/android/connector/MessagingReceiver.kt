@@ -5,12 +5,11 @@ import android.content.Context
 import android.content.Intent
 import android.os.PowerManager
 import android.util.Log
-import com.google.crypto.tink.apps.webpush.WebPushHybridDecrypt
 import org.unifiedpush.android.connector.data.PushEndpoint
 import org.unifiedpush.android.connector.data.PushMessage
+import org.unifiedpush.android.connector.keys.DefaultKeyManager
+import org.unifiedpush.android.connector.keys.KeyManager
 import java.security.GeneralSecurityException
-import java.security.interfaces.ECPrivateKey
-import java.security.interfaces.ECPublicKey
 
 /**
  * Receive UnifiedPush messages (new endpoints, unregistrations, push messages, errors) from the distributors
@@ -110,6 +109,19 @@ import java.security.interfaces.ECPublicKey
 open class MessagingReceiver : BroadcastReceiver() {
 
     /**
+     * Define the [KeyManager] to use. [DefaultKeyManager] by default.
+     *
+     * If you wish to change the [KeyManager], you need to call [UnifiedPush.registerApp],
+     * [UnifiedPush.unregisterApp] and [UnifiedPush.forceRemoveDistributor] with the same
+     * KeyManager.
+     *
+     * @return a [KeyManager]
+     */
+    open fun getKeyManager(context: Context): KeyManager {
+        return DefaultKeyManager(context)
+    }
+
+    /**
      * A new endpoint is to be used for sending push messages. The new endpoint
      * should be send to the application server, and the app should sync for
      * missing notifications.
@@ -136,6 +148,7 @@ open class MessagingReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val token = intent.getStringExtra(EXTRA_TOKEN)
         val store = Store(context)
+        val keyManager = getKeyManager(context)
         val instance = token?.let {
             store.registrationSet.tryGetInstance(it)
         } ?: return
@@ -148,7 +161,7 @@ open class MessagingReceiver : BroadcastReceiver() {
             ACTION_NEW_ENDPOINT -> {
                 val endpoint = intent.getStringExtra(EXTRA_ENDPOINT) ?: return
                 val id = intent.getStringExtra(EXTRA_MESSAGE_ID)
-                val pubKeys = store.registrationSet.tryGetPublicKeySet(instance)
+                val pubKeys = keyManager.getPublicKeySet(instance)
                 store.distributorAck = true
                 onNewEndpoint(context, PushEndpoint(endpoint, pubKeys), instance)
                 store.tryGetDistributor()?.let {
@@ -158,33 +171,27 @@ open class MessagingReceiver : BroadcastReceiver() {
             ACTION_REGISTRATION_FAILED -> {
                 val reason = intent.getStringExtra(EXTRA_REASON).toFailedReason()
                 Log.i(TAG, "Failed: $reason")
-                store.registrationSet.removeInstance(instance)
+                store.registrationSet.removeInstance(instance, keyManager)
                 onRegistrationFailed(context, reason, instance)
             }
             ACTION_UNREGISTERED -> {
                 onUnregistered(context, instance)
-                store.registrationSet.removeInstance(instance).ifEmpty {
+                store.registrationSet.removeInstance(instance, keyManager).ifEmpty {
                     store.removeDistributor()
                 }
             }
             ACTION_MESSAGE -> {
                 val message = intent.getByteArrayExtra(EXTRA_BYTES_MESSAGE) ?: return
                 val id = intent.getStringExtra(EXTRA_MESSAGE_ID)
-                store.registrationSet.tryGetWebPushKeys(instance)?.let { wp ->
-                    try {
-                        val hybridDecrypt =
-                            WebPushHybridDecrypt.Builder()
-                                .withAuthSecret(wp.auth)
-                                .withRecipientPublicKey(wp.keyPair.public as ECPublicKey)
-                                .withRecipientPrivateKey(wp.keyPair.private as ECPrivateKey)
-                                .build()
-                        val clearMessage = hybridDecrypt.decrypt(message, null)
-                        onMessage(context, PushMessage(clearMessage, true), instance)
-                    } catch (e: GeneralSecurityException) {
-                        Log.w(TAG, "Could not decrypt message, trying with plain text. Cause: ${e.message}")
-                        onMessage(context, PushMessage(message, false), instance)
-                    }
-                } ?: onMessage(context, PushMessage(message, false), instance)
+                val pushMessage = try {
+                    keyManager.decrypt(instance, message)?.let {
+                        PushMessage(it, true)
+                    } ?: PushMessage(message, false)
+                } catch (e: GeneralSecurityException) {
+                    Log.w(TAG, "Could not decrypt message, trying with plain text. Cause: ${e.message}")
+                    PushMessage(message, false)
+                }
+                onMessage(context, pushMessage, instance)
                 store.tryGetDistributor()?.let {
                     mayAcknowledgeMessage(context, it, id, token)
                 }

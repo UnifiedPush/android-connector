@@ -1,7 +1,7 @@
 package org.unifiedpush.android.connector
 
 import android.content.SharedPreferences
-import org.unifiedpush.android.connector.data.PublicKeySet
+import org.unifiedpush.android.connector.keys.KeyManager
 
 internal class RegistrationSet(private val preferences: SharedPreferences) {
 
@@ -11,25 +11,14 @@ internal class RegistrationSet(private val preferences: SharedPreferences) {
         }
     }
 
-    internal fun tryGetWebPushKeys(instance: String): WebPushKeys? {
-        return synchronized(registrationLock) {
-            Registration.tryGetWebPushKeys(preferences, instance)
-        }
-    }
-
-    internal fun tryGetPublicKeySet(instance: String): PublicKeySet? {
-        return synchronized(registrationLock) {
-            Registration.tryGetWebPushKeys(preferences, instance)?.publicKeySet
-        }
-    }
-
     internal fun newOrUpdate(
         instance: String,
         messageForDistributor: String?,
-        vapid: String?
+        vapid: String?,
+        keyManager: KeyManager,
     ): Registration {
         return synchronized(registrationLock) {
-            Registration.newOrUpdate(preferences, instance, messageForDistributor, vapid)
+            Registration.newOrUpdate(preferences, instance, messageForDistributor, vapid, keyManager)
         }
     }
 
@@ -47,7 +36,7 @@ internal class RegistrationSet(private val preferences: SharedPreferences) {
     /**
      * Remove instance and return the updated set of instances
      */
-    internal fun removeInstance(instance: String): Set<String> {
+    internal fun removeInstance(instance: String, keyManager: KeyManager): Set<String> {
         synchronized(registrationLock) {
             val instances = preferences.getStringSet(PREF_MASTER_INSTANCES, null)?.toMutableSet()
                 ?: emptySet<String>().toMutableSet()
@@ -61,11 +50,12 @@ internal class RegistrationSet(private val preferences: SharedPreferences) {
                 .remove(PREF_CONNECTOR_PRIVKEY.format(instance))
                 .remove(PREF_CONNECTOR_AUTH.format(instance))
                 .apply()
+            keyManager.delete(instance)
             return instances
         }
     }
 
-    internal fun removeInstances() {
+    internal fun removeInstances(keyManager: KeyManager) {
         synchronized(registrationLock) {
             preferences.getStringSet(PREF_MASTER_INSTANCES, null)?.forEach { instance ->
                 preferences.edit()
@@ -76,6 +66,7 @@ internal class RegistrationSet(private val preferences: SharedPreferences) {
                     .remove(PREF_CONNECTOR_PRIVKEY.format(instance))
                     .remove(PREF_CONNECTOR_AUTH.format(instance))
                     .apply()
+                keyManager.delete(instance)
             }
             preferences.edit().remove(PREF_MASTER_INSTANCES).apply()
         }
