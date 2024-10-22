@@ -411,6 +411,15 @@ object UnifiedPush {
                     saveDistributor(context, it)
                     callback(true)
                 }
+            } ?: run {
+                // Fallback to AND_2, if there is only one distributor, we use it.
+                val distributors = getDistributors(context)
+                if (distributors.size == 1) {
+                    saveDistributor(context, distributors.first())
+                    callback(true)
+                } else {
+                    callback(false)
+                }
             }
         } else {
             callback(false)
