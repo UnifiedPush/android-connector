@@ -106,7 +106,7 @@ import java.security.GeneralSecurityException
  * </receiver>
  * ```
  */
-open class MessagingReceiver : BroadcastReceiver() {
+abstract class MessagingReceiver : BroadcastReceiver() {
 
     /**
      * Define the [KeyManager] to use. [DefaultKeyManager] by default.
@@ -126,21 +126,24 @@ open class MessagingReceiver : BroadcastReceiver() {
      * should be send to the application server, and the app should sync for
      * missing notifications.
      */
-    open fun onNewEndpoint(context: Context, endpoint: PushEndpoint, instance: String) {}
+    abstract fun onNewEndpoint(context: Context, endpoint: PushEndpoint, instance: String)
+
     /**
      * The registration is not possible, eg. no network, depending on the reason,
      * you can try to register again directly.
      */
-    open fun onRegistrationFailed(context: Context, reason: FailedReason, instance: String) {}
+    abstract fun onRegistrationFailed(context: Context, reason: FailedReason, instance: String)
+
     /**
      * This application is unregistered by the distributor from receiving push messages
      */
-    open fun onUnregistered(context: Context, instance: String) {}
+    abstract fun onUnregistered(context: Context, instance: String)
+
     /**
      * A new message is received. The message contains the decrypted content of the push message
      * for the instance
      */
-    open fun onMessage(context: Context, message: PushMessage, instance: String) {}
+    abstract fun onMessage(context: Context, message: PushMessage, instance: String)
 
     /**
      * Handle UnifiedPush messages, should not be override
