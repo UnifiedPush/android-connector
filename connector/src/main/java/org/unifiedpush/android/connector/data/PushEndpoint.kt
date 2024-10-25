@@ -14,6 +14,7 @@ class PushEndpoint(
 ): Parcelable {
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(url)
+        parcel.writeInt(pubKeySet?.let { 1 } ?: 0)
         pubKeySet?.writeToParcel(parcel, flags)
     }
 
@@ -23,9 +24,15 @@ class PushEndpoint(
 
     companion object CREATOR : Parcelable.Creator<PushEndpoint> {
         override fun createFromParcel(parcel: Parcel): PushEndpoint? {
-            return PushEndpoint(
-                parcel.readString() ?: return null,
+            val url = parcel.readString()
+            val pubKeySet = if (parcel.readInt() == 1) {
                 PublicKeySet.createFromParcel(parcel)
+            } else {
+                null
+            }
+            return PushEndpoint(
+                url ?: return null,
+                pubKeySet
             )
         }
 

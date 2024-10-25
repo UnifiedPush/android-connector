@@ -13,6 +13,7 @@ class PushMessage(
     val decrypted: Boolean,
 ): Parcelable {
     override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeInt(content.size)
         parcel.writeByteArray(content)
         parcel.writeInt(if (decrypted) { 1 } else { 0 })
     }
@@ -23,14 +24,16 @@ class PushMessage(
 
     companion object CREATOR : Parcelable.Creator<PushMessage> {
         override fun createFromParcel(parcel: Parcel): PushMessage? {
-            val content = ByteArray(0)
-            parcel.writeByteArray(content)
+            val size = parcel.readInt()
+            val content = ByteArray(size)
+            parcel.readByteArray(content)
+            val decrypted = parcel.readInt() == 1
             if (content.isEmpty()) {
                 return null
             }
             return PushMessage(
                 content,
-                parcel.readInt() == 1
+                decrypted
             )
         }
 

@@ -24,9 +24,11 @@ class PublicKeySet(
 
     companion object CREATOR : Parcelable.Creator<PublicKeySet> {
         override fun createFromParcel(parcel: Parcel): PublicKeySet? {
+            val pubKey = parcel.readString()
+            val auth = parcel.readString()
             return PublicKeySet(
-                parcel.readString() ?: return null,
-                parcel.readString() ?: return null
+                pubKey ?: return null,
+                auth ?: return null
             )
         }
 
