@@ -167,7 +167,6 @@ import kotlin.jvm.Throws
  * It removes the distributor if this is the last instance to unregister.
  */
 object UnifiedPush {
-
     // For compatibility purpose with AND_2
     private const val FEATURE_BYTES_MESSAGE = "org.unifiedpush.android.distributor.feature.BYTES_MESSAGE"
 
@@ -193,7 +192,7 @@ object UnifiedPush {
         context: Context,
         instance: String = INSTANCE_DEFAULT,
         messageForDistributor: String? = null,
-        vapid: String? = null
+        vapid: String? = null,
     ) {
         registerApp(context, instance, messageForDistributor, vapid, DefaultKeyManager(context))
     }
@@ -209,7 +208,7 @@ object UnifiedPush {
         instance: String = INSTANCE_DEFAULT,
         messageForDistributor: String? = null,
         vapid: String? = null,
-        keyManager: KeyManager
+        keyManager: KeyManager,
     ) {
         val store = Store(context)
         registerApp(
@@ -219,8 +218,8 @@ object UnifiedPush {
                 instance,
                 messageForDistributor,
                 vapid,
-                keyManager
-            )
+                keyManager,
+            ),
         )
     }
 
@@ -229,7 +228,7 @@ object UnifiedPush {
     private fun registerApp(
         context: Context,
         store: Store,
-        registration: Registration
+        registration: Registration,
     ) {
         val distributor = getDistributor(context, store, false) ?: return
         registration.vapid?.let {
@@ -244,23 +243,24 @@ object UnifiedPush {
         val dummyIntent = Intent("org.unifiedpush.dummy_app")
         val pi = PendingIntent.getBroadcast(context, 0, dummyIntent, PendingIntent.FLAG_IMMUTABLE)
 
-        val broadcastIntent = Intent().apply {
-            `package` = distributor
-            action = ACTION_REGISTER
-            putExtra(EXTRA_TOKEN, registration.token)
-            // For compatibility with AND_2
-            putExtra(EXTRA_FEATURES, arrayOf(FEATURE_BYTES_MESSAGE))
-            // For compatibility with AND_2, replaced by pi for SDK < 34
-            putExtra(EXTRA_APPLICATION, context.packageName)
-            // For SDK < 34
-            putExtra(EXTRA_PI, pi)
-            registration.messageForDistributor?.let {
-                putExtra(EXTRA_MESSAGE_FOR_DISTRIB, it)
+        val broadcastIntent =
+            Intent().apply {
+                `package` = distributor
+                action = ACTION_REGISTER
+                putExtra(EXTRA_TOKEN, registration.token)
+                // For compatibility with AND_2
+                putExtra(EXTRA_FEATURES, arrayOf(FEATURE_BYTES_MESSAGE))
+                // For compatibility with AND_2, replaced by pi for SDK < 34
+                putExtra(EXTRA_APPLICATION, context.packageName)
+                // For SDK < 34
+                putExtra(EXTRA_PI, pi)
+                registration.messageForDistributor?.let {
+                    putExtra(EXTRA_MESSAGE_FOR_DISTRIB, it)
+                }
+                registration.vapid?.let {
+                    putExtra(EXTRA_VAPID, it)
+                }
             }
-            registration.vapid?.let {
-                putExtra(EXTRA_VAPID, it)
-            }
-        }
         if (Build.VERSION.SDK_INT >= 34) {
             val broadcastOptions = BroadcastOptions.makeBasic().setShareIdentityEnabled(true)
             context.sendBroadcast(broadcastIntent, null, broadcastOptions.toBundle())
@@ -278,7 +278,10 @@ object UnifiedPush {
      * @param [instance] Registration instance. Can be used to get multiple registrations, eg. for multi-account support.
      */
     @JvmStatic
-    fun unregisterApp(context: Context, instance: String = INSTANCE_DEFAULT) {
+    fun unregisterApp(
+        context: Context,
+        instance: String = INSTANCE_DEFAULT,
+    ) {
         unregisterApp(context, instance, DefaultKeyManager(context))
     }
 
@@ -288,20 +291,26 @@ object UnifiedPush {
      * @param [keyManager] To manager web push keys. By default: [DefaultKeyManager].
      */
     @JvmStatic
-    fun unregisterApp(context: Context, instance: String = INSTANCE_DEFAULT, keyManager: KeyManager) {
+    fun unregisterApp(
+        context: Context,
+        instance: String = INSTANCE_DEFAULT,
+        keyManager: KeyManager,
+    ) {
         val store = Store(context)
-        val distributor = getDistributor(context, store, false) ?: run {
-            // This should not be necessary
-            store.registrationSet.removeInstances(keyManager)
-            store.removeDistributor()
-            return
-        }
+        val distributor =
+            getDistributor(context, store, false) ?: run {
+                // This should not be necessary
+                store.registrationSet.removeInstances(keyManager)
+                store.removeDistributor()
+                return
+            }
         val token = store.registrationSet.tryGetToken(instance) ?: return
-        val broadcastIntent = Intent().apply {
-            `package` = distributor
-            action = ACTION_UNREGISTER
-            putExtra(EXTRA_TOKEN, token)
-        }
+        val broadcastIntent =
+            Intent().apply {
+                `package` = distributor
+                action = ACTION_UNREGISTER
+                putExtra(EXTRA_TOKEN, token)
+            }
         store.registrationSet.removeInstance(instance, keyManager).ifEmpty {
             store.removeDistributor()
         }
@@ -315,9 +324,7 @@ object UnifiedPush {
      * @return The list of distributor's package name
      */
     @JvmStatic
-    fun getDistributors(
-        context: Context
-    ): List<String> {
+    fun getDistributors(context: Context): List<String> {
         return getResolveInfo(context, ACTION_REGISTER).mapNotNull {
             // Remove local package if it has embedded fcm distrib
             // and PlayServices are not available
@@ -335,30 +342,35 @@ object UnifiedPush {
     }
 
     @JvmStatic
-    private fun getResolveInfo(context: Context, action: String, packageName: String? = null): List<ResolveInfo> {
-        val intent = Intent(action).apply {
-            packageName?.let {
-                `package` = it
-            }
-        }
-        return (
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    context.packageManager.queryBroadcastReceivers(
-                        intent,
-                        PackageManager.ResolveInfoFlags.of(
-                            PackageManager.GET_META_DATA.toLong() +
-                                    PackageManager.GET_RESOLVED_FILTER.toLong()
-                        )
-                    )
-                } else {
-                    context.packageManager.queryBroadcastReceivers(
-                        Intent(ACTION_REGISTER),
-                        PackageManager.GET_RESOLVED_FILTER
-                    )
+    private fun getResolveInfo(
+        context: Context,
+        action: String,
+        packageName: String? = null,
+    ): List<ResolveInfo> {
+        val intent =
+            Intent(action).apply {
+                packageName?.let {
+                    `package` = it
                 }
-                ).filter {
-                it.activityInfo.exported || it.activityInfo.packageName == context.packageName
             }
+        return (
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.queryBroadcastReceivers(
+                    intent,
+                    PackageManager.ResolveInfoFlags.of(
+                        PackageManager.GET_META_DATA.toLong() +
+                            PackageManager.GET_RESOLVED_FILTER.toLong(),
+                    ),
+                )
+            } else {
+                context.packageManager.queryBroadcastReceivers(
+                    Intent(ACTION_REGISTER),
+                    PackageManager.GET_RESOLVED_FILTER,
+                )
+            }
+        ).filter {
+            it.activityInfo.exported || it.activityInfo.packageName == context.packageName
+        }
     }
 
     /**
@@ -398,14 +410,18 @@ object UnifiedPush {
      * true if the registration using the deeplink succeeded.
      */
     @JvmStatic
-    fun tryUseDefaultDistributor(context: Context, callback: (Boolean) -> Unit) {
+    fun tryUseDefaultDistributor(
+        context: Context,
+        callback: (Boolean) -> Unit,
+    ) {
         if (context is Activity) {
             LinkActivityHelper.resolveLinkActivityPackageName(context)?.let {
                 if (it == "android") {
                     LinkActivity.callback = callback
-                    val intent = Intent().apply {
-                        setClassName(context.packageName, LinkActivity::class.java.name)
-                    }
+                    val intent =
+                        Intent().apply {
+                            setClassName(context.packageName, LinkActivity::class.java.name)
+                        }
                     context.startActivity(intent)
                 } else {
                     saveDistributor(context, it)
@@ -467,7 +483,10 @@ object UnifiedPush {
      * true if the registration using the deeplink succeeded.
      */
     @JvmStatic
-    fun tryUseCurrentOrDefaultDistributor(context: Context, callback: (Boolean) -> Unit) {
+    fun tryUseCurrentOrDefaultDistributor(
+        context: Context,
+        callback: (Boolean) -> Unit,
+    ) {
         getAckDistributor(context)?.let {
             callback(true)
         } ?: run {
@@ -482,7 +501,10 @@ object UnifiedPush {
      * @param [distributor] The distributor package name
      */
     @JvmStatic
-    fun saveDistributor(context: Context, distributor: String) {
+    fun saveDistributor(
+        context: Context,
+        distributor: String,
+    ) {
         val store = Store(context)
         // We use tryGetDistributor because we don't need
         // to check if the distributor is still installed.
@@ -524,7 +546,11 @@ object UnifiedPush {
      * @param [ack] `true` if the distributor has to be ack.
      */
     @JvmStatic
-    private fun getDistributor(context: Context, store: Store, ack: Boolean): String? {
+    private fun getDistributor(
+        context: Context,
+        store: Store,
+        ack: Boolean,
+    ): String? {
         if (ack && !store.distributorAck) {
             return null
         }
@@ -543,23 +569,32 @@ object UnifiedPush {
     }
 
     @JvmStatic
-    private fun broadcastLocalUnregistered(context: Context, store: Store, instance: String) {
+    private fun broadcastLocalUnregistered(
+        context: Context,
+        store: Store,
+        instance: String,
+    ) {
         val token = store.registrationSet.tryGetToken(instance) ?: return
-        val broadcastIntent = Intent().apply {
-            `package` = context.packageName
-            action = ACTION_UNREGISTERED
-            putExtra(EXTRA_TOKEN, token)
-        }
+        val broadcastIntent =
+            Intent().apply {
+                `package` = context.packageName
+                action = ACTION_UNREGISTERED
+                putExtra(EXTRA_TOKEN, token)
+            }
         context.sendBroadcast(broadcastIntent)
     }
 
     @JvmStatic
     private fun hasEmbeddedFcmDistributor(context: Context): Boolean {
-        val packageInfo = context.packageManager.getPackageInfo(context.packageName, PackageManager.GET_SERVICES + PackageManager.GET_RECEIVERS)
+        val packageInfo =
+            context.packageManager.getPackageInfo(
+                context.packageName,
+                PackageManager.GET_SERVICES + PackageManager.GET_RECEIVERS,
+            )
         return packageInfo.services?.map { it.name }
             ?.contains("org.unifiedpush.android.embedded_fcm_distributor.fcm.FirebaseForwardingService") == true ||
-                packageInfo.receivers?.map { it.name }
-                    ?.contains("org.unifiedpush.android.foss_embedded_fcm_distributor.fcm.FirebaseReceiver") == true
+            packageInfo.receivers?.map { it.name }
+                ?.contains("org.unifiedpush.android.foss_embedded_fcm_distributor.fcm.FirebaseReceiver") == true
     }
 
     @JvmStatic
@@ -568,7 +603,6 @@ object UnifiedPush {
         try {
             pm.getPackageInfo("com.google.android.gms", PackageManager.GET_ACTIVITIES)
             return true
-
         } catch (e: PackageManager.NameNotFoundException) {
             Log.v(TAG, "Google services not found: ${e.message}")
         }
@@ -591,7 +625,10 @@ object UnifiedPush {
      * @param [keyManager] To manager web push keys. By default: [DefaultKeyManager].
      */
     @JvmStatic
-    fun forceRemoveDistributor(context: Context, keyManager: KeyManager) {
+    fun forceRemoveDistributor(
+        context: Context,
+        keyManager: KeyManager,
+    ) {
         val store = Store(context)
         store.registrationSet.forEachInstance {
             unregisterApp(context, it)
@@ -600,11 +637,10 @@ object UnifiedPush {
         store.removeDistributor()
     }
 
-
     /**
      * The VAPID public key is not in the right format.
      *
      * It should be in the uncompressed form, and base64url encoded (87 chars long)
      */
-    class VapidNotValidException: AndroidException()
+    class VapidNotValidException : AndroidException()
 }

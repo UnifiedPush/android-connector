@@ -11,7 +11,10 @@ interface KeyManager {
      *
      * @return clear text or `null` if decryption failed.
      */
-    fun decrypt(instance: String, sealed: ByteArray): ByteArray?
+    fun decrypt(
+        instance: String,
+        sealed: ByteArray,
+    ): ByteArray?
 
     /**
      * Generate a new key pair and auth secret for [instance].

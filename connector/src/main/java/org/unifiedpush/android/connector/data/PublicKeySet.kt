@@ -12,8 +12,11 @@ class PublicKeySet(
     val pubKey: String,
     /** Auth secret, base64url encoded without padding. */
     val auth: String,
-): Parcelable {
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
+) : Parcelable {
+    override fun writeToParcel(
+        parcel: Parcel,
+        flags: Int,
+    ) {
         parcel.writeString(pubKey)
         parcel.writeString(auth)
     }
@@ -28,7 +31,7 @@ class PublicKeySet(
             val auth = parcel.readString()
             return PublicKeySet(
                 pubKey ?: return null,
-                auth ?: return null
+                auth ?: return null,
             )
         }
 

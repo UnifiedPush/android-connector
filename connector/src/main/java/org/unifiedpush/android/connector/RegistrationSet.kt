@@ -4,7 +4,6 @@ import android.content.SharedPreferences
 import org.unifiedpush.android.connector.keys.KeyManager
 
 internal class RegistrationSet(private val preferences: SharedPreferences) {
-
     internal fun tryGetToken(instance: String): String? {
         return synchronized(registrationLock) {
             preferences.getString(PREF_CONNECTOR_TOKEN.format(instance), null)
@@ -36,10 +35,14 @@ internal class RegistrationSet(private val preferences: SharedPreferences) {
     /**
      * Remove instance and return the updated set of instances
      */
-    internal fun removeInstance(instance: String, keyManager: KeyManager): Set<String> {
+    internal fun removeInstance(
+        instance: String,
+        keyManager: KeyManager,
+    ): Set<String> {
         synchronized(registrationLock) {
-            val instances = preferences.getStringSet(PREF_MASTER_INSTANCES, null)?.toMutableSet()
-                ?: emptySet<String>().toMutableSet()
+            val instances =
+                preferences.getStringSet(PREF_MASTER_INSTANCES, null)?.toMutableSet()
+                    ?: emptySet<String>().toMutableSet()
             instances.remove(instance)
             preferences.edit()
                 .putStringSet(PREF_MASTER_INSTANCES, instances)
@@ -71,6 +74,7 @@ internal class RegistrationSet(private val preferences: SharedPreferences) {
             preferences.edit().remove(PREF_MASTER_INSTANCES).apply()
         }
     }
+
     internal fun forEachInstance(block: (instance: String) -> Unit) {
         synchronized(registrationLock) {
             preferences.getStringSet(PREF_MASTER_INSTANCES, null)?.forEach {

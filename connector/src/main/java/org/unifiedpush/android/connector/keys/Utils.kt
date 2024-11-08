@@ -10,15 +10,17 @@ internal fun ECPublicKey.serialize(): String {
     return EllipticCurves.pointEncode(
         EllipticCurves.CurveType.NIST_P256,
         EllipticCurves.PointFormatType.UNCOMPRESSED,
-        this.w
+        this.w,
     ).b64encode()
 }
 
 internal fun String.deserializePubKey(): ECPublicKey {
-    val point = EllipticCurves.pointDecode(
-        EllipticCurves.CurveType.NIST_P256,
-        EllipticCurves.PointFormatType.UNCOMPRESSED, this.b64decode()
-    )
+    val point =
+        EllipticCurves.pointDecode(
+            EllipticCurves.CurveType.NIST_P256,
+            EllipticCurves.PointFormatType.UNCOMPRESSED,
+            this.b64decode(),
+        )
     val spec = EllipticCurves.getCurveSpec(EllipticCurves.CurveType.NIST_P256)
     return KeyFactory.getInstance("EC").generatePublic(ECPublicKeySpec(point, spec)) as ECPublicKey
 }

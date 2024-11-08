@@ -14,7 +14,7 @@ import android.os.IBinder
  * to raise the application to the foreground, allowing it to start a foreground
  * service from the background during this 5 seconds
  */
-class RaiseToForegroundService: Service() {
+class RaiseToForegroundService : Service() {
     override fun onBind(intent: Intent?): IBinder {
         return binder
     }

@@ -11,8 +11,11 @@ class PushEndpoint(
     val url: String,
     /** Web Push public key set. */
     val pubKeySet: PublicKeySet?,
-): Parcelable {
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
+) : Parcelable {
+    override fun writeToParcel(
+        parcel: Parcel,
+        flags: Int,
+    ) {
         parcel.writeString(url)
         parcel.writeInt(pubKeySet?.let { 1 } ?: 0)
         pubKeySet?.writeToParcel(parcel, flags)
@@ -25,14 +28,15 @@ class PushEndpoint(
     companion object CREATOR : Parcelable.Creator<PushEndpoint> {
         override fun createFromParcel(parcel: Parcel): PushEndpoint? {
             val url = parcel.readString()
-            val pubKeySet = if (parcel.readInt() == 1) {
-                PublicKeySet.createFromParcel(parcel)
-            } else {
-                null
-            }
+            val pubKeySet =
+                if (parcel.readInt() == 1) {
+                    PublicKeySet.createFromParcel(parcel)
+                } else {
+                    null
+                }
             return PushEndpoint(
                 url ?: return null,
-                pubKeySet
+                pubKeySet,
             )
         }
 

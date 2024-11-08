@@ -43,7 +43,6 @@ import android.util.Log
  * ```
  */
 class LinkActivityHelper(private val activity: Activity) {
-    private val TAG = "UnifiedPush.Link"
     private val gRequestCode = (1..Int.MAX_VALUE).random()
 
     /**
@@ -52,9 +51,10 @@ class LinkActivityHelper(private val activity: Activity) {
      * @return `true` if the activity has been requested else no distributor can handle the request
      */
     fun startLinkActivityForResult(): Boolean {
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            data = Uri.parse("unifiedpush://link")
-        }
+        val intent =
+            Intent(Intent.ACTION_VIEW).apply {
+                data = Uri.parse("unifiedpush://link")
+            }
         resolveLinkActivityPackageName(activity, intent)?.let {
             Log.d(TAG, "Found activity for $it default=${it != "android"}")
             activity.startActivityForResult(intent, gRequestCode)
@@ -73,7 +73,11 @@ class LinkActivityHelper(private val activity: Activity) {
      * @return `true` if the [requestCode] matches the one of the request and the [resultCode]
      *  is OK and the [data] contains the PendingIntent to identify the distributor packageName.
      */
-    fun onLinkActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+    fun onLinkActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?,
+    ): Boolean {
         val isRequestCodeMatching = requestCode == gRequestCode
         val isResultCodeOK = resultCode == RESULT_OK
         if (isRequestCodeMatching && isResultCodeOK) {
@@ -85,9 +89,10 @@ class LinkActivityHelper(private val activity: Activity) {
                 // targetPackage has been renamed creatorPackage after SDK 17
             }?.targetPackage?.let {
                 Log.d(TAG, "Using distributor $it.")
-                val store = Store(activity).apply {
-                    saveDistributor(it)
-                }
+                val store =
+                    Store(activity).apply {
+                        saveDistributor(it)
+                    }
                 return true
             } ?: run {
                 Log.d(TAG, "Could not find creator of pending intent")
@@ -100,6 +105,8 @@ class LinkActivityHelper(private val activity: Activity) {
     }
 
     internal companion object {
+        private const val TAG = "UnifiedPush.Link"
+
         /**
          * Resolve the package name of the application able to open `unifiedpush://link`
          *
@@ -113,10 +120,14 @@ class LinkActivityHelper(private val activity: Activity) {
          * "android" if the system must ask what application should open the link,
          * or the package name of the only, or default, application which can open the link.
          */
-        internal fun resolveLinkActivityPackageName(context: Context, intent: Intent? = null): String? {
-            val lIntent = intent ?: Intent(Intent.ACTION_VIEW).apply {
-                data = Uri.parse("unifiedpush://link")
-            }
+        internal fun resolveLinkActivityPackageName(
+            context: Context,
+            intent: Intent? = null,
+        ): String? {
+            val lIntent =
+                intent ?: Intent(Intent.ACTION_VIEW).apply {
+                    data = Uri.parse("unifiedpush://link")
+                }
             val pm = context.packageManager
             val resolveInfo = pm.resolveActivity(lIntent, PackageManager.MATCH_DEFAULT_ONLY)
             return resolveInfo?.activityInfo?.packageName

@@ -19,28 +19,32 @@ import javax.crypto.KeyGenerator
 import javax.crypto.spec.GCMParameterSpec
 
 @RequiresApi(23)
-internal class WebPushKeysEntries23(private val instance: String, private val prefs: SharedPreferences):
+internal class WebPushKeysEntries23(private val instance: String, private val prefs: SharedPreferences) :
     WebPushKeysEntries {
-
     override fun getWebPushKeys(): WebPushKeys? {
-        val auth = prefs.getString(PREF_CONNECTOR_AUTH.format(instance), null)
-            ?.b64decode()
-            ?: return null
-        val iv = prefs.getString(PREF_CONNECTOR_IV.format(instance), null)
-            ?.b64decode()
-            ?: return null
-        val sealedPrivateKey = prefs.getString(PREF_CONNECTOR_PRIVKEY.format(instance), null)
-            ?.b64decode()
-            ?: return null
-        val publicKey = prefs.getString(PREF_CONNECTOR_PUBKEY.format(instance), null)
-            ?.deserializePubKey()
-            ?: return null
+        val auth =
+            prefs.getString(PREF_CONNECTOR_AUTH.format(instance), null)
+                ?.b64decode()
+                ?: return null
+        val iv =
+            prefs.getString(PREF_CONNECTOR_IV.format(instance), null)
+                ?.b64decode()
+                ?: return null
+        val sealedPrivateKey =
+            prefs.getString(PREF_CONNECTOR_PRIVKEY.format(instance), null)
+                ?.b64decode()
+                ?: return null
+        val publicKey =
+            prefs.getString(PREF_CONNECTOR_PUBKEY.format(instance), null)
+                ?.deserializePubKey()
+                ?: return null
 
         val cipher = getDecryptionCipher(iv)
         val privateBytes = cipher.doFinal(sealedPrivateKey)
-        val privateKey = KeyFactory.getInstance("EC").generatePrivate(
-            PKCS8EncodedKeySpec(privateBytes)
-        )
+        val privateKey =
+            KeyFactory.getInstance("EC").generatePrivate(
+                PKCS8EncodedKeySpec(privateBytes),
+            )
         return WebPushKeys(auth, KeyPair(publicKey, privateKey))
     }
 
@@ -60,17 +64,19 @@ internal class WebPushKeysEntries23(private val instance: String, private val pr
     }
 
     override fun hasWebPushKeys(): Boolean {
-        val ks = KeyStore.getInstance(KEYSTORE_PROVIDER).apply {
-            load(null)
-        }
+        val ks =
+            KeyStore.getInstance(KEYSTORE_PROVIDER).apply {
+                load(null)
+            }
         return prefs.contains(PREF_CONNECTOR_IV.format(instance)) &&
-                prefs.contains(PREF_CONNECTOR_AUTH.format(instance)) &&
-                prefs.contains(PREF_CONNECTOR_PUBKEY.format(instance)) &&
-                prefs.contains(PREF_CONNECTOR_PRIVKEY.format(instance)) &&
-                ks.containsAlias(ALIAS) && ks.entryInstanceOf(
-                    ALIAS,
-                    SecretKeyEntry::class.java
-                )
+            prefs.contains(PREF_CONNECTOR_AUTH.format(instance)) &&
+            prefs.contains(PREF_CONNECTOR_PUBKEY.format(instance)) &&
+            prefs.contains(PREF_CONNECTOR_PRIVKEY.format(instance)) &&
+            ks.containsAlias(ALIAS) &&
+            ks.entryInstanceOf(
+                ALIAS,
+                SecretKeyEntry::class.java,
+            )
     }
 
     override fun deleteWebPushKeys() {
@@ -83,31 +89,36 @@ internal class WebPushKeysEntries23(private val instance: String, private val pr
     }
 
     private fun getEncryptionCipher(): Cipher {
-        val aesKey = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE_PROVIDER).apply {
-            init(
-                KeyGenParameterSpec.Builder(ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
-                    .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-                    .build()
-            )
-        }.generateKey()
+        val aesKey =
+            KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE_PROVIDER).apply {
+                init(
+                    KeyGenParameterSpec.Builder(ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+                        .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                        .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                        .build(),
+                )
+            }.generateKey()
 
         return Cipher.getInstance("AES/GCM/NoPadding").apply {
             init(
-                Cipher.ENCRYPT_MODE, aesKey
+                Cipher.ENCRYPT_MODE,
+                aesKey,
             )
         }
     }
 
     private fun getDecryptionCipher(iIV: ByteArray): Cipher {
-        val ks = KeyStore.getInstance(KEYSTORE_PROVIDER).apply {
-            load(null)
-        }
+        val ks =
+            KeyStore.getInstance(KEYSTORE_PROVIDER).apply {
+                load(null)
+            }
         val aesKey = ks.getEntry(ALIAS, null) as SecretKeyEntry
 
         return Cipher.getInstance("AES/GCM/NoPadding").apply {
             init(
-                Cipher.DECRYPT_MODE, aesKey.secretKey, GCMParameterSpec(128, iIV)
+                Cipher.DECRYPT_MODE,
+                aesKey.secretKey,
+                GCMParameterSpec(128, iIV),
             )
         }
     }

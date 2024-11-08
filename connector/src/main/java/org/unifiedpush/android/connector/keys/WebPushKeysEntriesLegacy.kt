@@ -9,22 +9,26 @@ import java.security.KeyPair
 import java.security.interfaces.ECPublicKey
 import java.security.spec.PKCS8EncodedKeySpec
 
-internal class WebPushKeysEntriesLegacy(private val instance: String, private val prefs: SharedPreferences):
+internal class WebPushKeysEntriesLegacy(private val instance: String, private val prefs: SharedPreferences) :
     WebPushKeysEntries {
     override fun getWebPushKeys(): WebPushKeys? {
-        val auth = prefs.getString(PREF_CONNECTOR_AUTH.format(instance), null)
-            ?.b64decode()
-            ?: return null
-        val privateBytes = prefs.getString(PREF_CONNECTOR_PRIVKEY.format(instance), null)
-            ?.b64decode()
-            ?: return null
-        val publicKey = prefs.getString(PREF_CONNECTOR_PUBKEY.format(instance), null)
-            ?.deserializePubKey()
-            ?: return null
+        val auth =
+            prefs.getString(PREF_CONNECTOR_AUTH.format(instance), null)
+                ?.b64decode()
+                ?: return null
+        val privateBytes =
+            prefs.getString(PREF_CONNECTOR_PRIVKEY.format(instance), null)
+                ?.b64decode()
+                ?: return null
+        val publicKey =
+            prefs.getString(PREF_CONNECTOR_PUBKEY.format(instance), null)
+                ?.deserializePubKey()
+                ?: return null
 
-        val privateKey = KeyFactory.getInstance("EC").generatePrivate(
-            PKCS8EncodedKeySpec(privateBytes)
-        )
+        val privateKey =
+            KeyFactory.getInstance("EC").generatePrivate(
+                PKCS8EncodedKeySpec(privateBytes),
+            )
         return WebPushKeys(auth, KeyPair(publicKey, privateKey))
     }
 
@@ -41,8 +45,8 @@ internal class WebPushKeysEntriesLegacy(private val instance: String, private va
 
     override fun hasWebPushKeys(): Boolean {
         return prefs.contains(PREF_CONNECTOR_AUTH.format(instance)) &&
-                prefs.contains(PREF_CONNECTOR_PUBKEY.format(instance)) &&
-                prefs.contains(PREF_CONNECTOR_PRIVKEY.format(instance))
+            prefs.contains(PREF_CONNECTOR_PUBKEY.format(instance)) &&
+            prefs.contains(PREF_CONNECTOR_PRIVKEY.format(instance))
     }
 
     override fun deleteWebPushKeys() {

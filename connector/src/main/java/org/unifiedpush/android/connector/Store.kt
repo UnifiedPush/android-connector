@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.SharedPreferences
 
 internal class Store(context: Context) {
-
     var registrationSet: RegistrationSet
 
     init {
@@ -34,12 +33,14 @@ internal class Store(context: Context) {
     }
 
     internal var distributorAck: Boolean
-        get() = synchronized(distributorLock) {
-            preferences.getBoolean(PREF_MASTER_DISTRIBUTOR_ACK, false)
-        }
-        set(value) = synchronized(distributorLock) {
-            preferences.edit().putBoolean(PREF_MASTER_DISTRIBUTOR_ACK, value).apply()
-        }
+        get() =
+            synchronized(distributorLock) {
+                preferences.getBoolean(PREF_MASTER_DISTRIBUTOR_ACK, false)
+            }
+        set(value) =
+            synchronized(distributorLock) {
+                preferences.edit().putBoolean(PREF_MASTER_DISTRIBUTOR_ACK, value).apply()
+            }
 
     companion object {
         private val distributorLock = Object()

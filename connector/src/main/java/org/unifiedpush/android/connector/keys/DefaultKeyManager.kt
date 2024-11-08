@@ -16,10 +16,13 @@ import java.security.interfaces.ECPublicKey
  *
  * For SDK < 23, private keys are stored in plain text in shared preferences.
  */
-class DefaultKeyManager(context: Context): KeyManager {
+class DefaultKeyManager(context: Context) : KeyManager {
     private val preferences = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
 
-    override fun decrypt(instance: String, sealed: ByteArray): ByteArray? {
+    override fun decrypt(
+        instance: String,
+        sealed: ByteArray,
+    ): ByteArray? {
         val keys = getKeyStoreEntries(instance).getOrNullWebPushKeys() ?: return null
         val hybridDecrypt =
             WebPushHybridDecrypt.Builder()

@@ -19,10 +19,11 @@ internal class WebPushKeys(
 ) {
     /** @return a [PublicKeySet] from the keys. */
     val publicKeySet: PublicKeySet
-        get() = PublicKeySet(
-            (keyPair.public as ECPublicKey).serialize(),
-            auth.b64encode(),
-        )
+        get() =
+            PublicKeySet(
+                (keyPair.public as ECPublicKey).serialize(),
+                auth.b64encode(),
+            )
 
     companion object {
         /**
@@ -31,7 +32,7 @@ internal class WebPushKeys(
         fun new(): WebPushKeys {
             return WebPushKeys(
                 keyPair = generateKeyPair(),
-                auth = generateAuthSecret()
+                auth = generateAuthSecret(),
             )
         }
 
@@ -48,6 +49,5 @@ internal class WebPushKeys(
                 SecureRandom().nextBytes(this)
             }
         }
-
     }
 }

@@ -11,11 +11,20 @@ class PushMessage(
     val content: ByteArray,
     /** Whether it has been correctly decrypted. */
     val decrypted: Boolean,
-): Parcelable {
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
+) : Parcelable {
+    override fun writeToParcel(
+        parcel: Parcel,
+        flags: Int,
+    ) {
         parcel.writeInt(content.size)
         parcel.writeByteArray(content)
-        parcel.writeInt(if (decrypted) { 1 } else { 0 })
+        parcel.writeInt(
+            if (decrypted) {
+                1
+            } else {
+                0
+            },
+        )
     }
 
     override fun describeContents(): Int {
@@ -33,7 +42,7 @@ class PushMessage(
             }
             return PushMessage(
                 content,
-                decrypted
+                decrypted,
             )
         }
 

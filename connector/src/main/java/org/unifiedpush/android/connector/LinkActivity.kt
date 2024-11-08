@@ -15,7 +15,7 @@ import android.os.Bundle
  * It runs [callback] as soon as the interaction with the potential distributor
  * finished.
  */
-internal class LinkActivity: Activity() {
+internal class LinkActivity : Activity() {
     private val helper = LinkActivityHelper(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,9 +25,13 @@ internal class LinkActivity: Activity() {
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?,
+    ) {
         stop(
-            helper.onLinkActivityResult(requestCode, resultCode, data)
+            helper.onLinkActivityResult(requestCode, resultCode, data),
         )
     }
 

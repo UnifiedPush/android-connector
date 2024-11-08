@@ -107,7 +107,6 @@ import java.security.GeneralSecurityException
  * ```
  */
 abstract class MessagingReceiver : BroadcastReceiver() {
-
     /**
      * Define the [KeyManager] to use. [DefaultKeyManager] by default.
      *
@@ -126,40 +125,60 @@ abstract class MessagingReceiver : BroadcastReceiver() {
      * should be send to the application server, and the app should sync for
      * missing notifications.
      */
-    abstract fun onNewEndpoint(context: Context, endpoint: PushEndpoint, instance: String)
+    abstract fun onNewEndpoint(
+        context: Context,
+        endpoint: PushEndpoint,
+        instance: String,
+    )
 
     /**
      * The registration is not possible, eg. no network, depending on the reason,
      * you can try to register again directly.
      */
-    abstract fun onRegistrationFailed(context: Context, reason: FailedReason, instance: String)
+    abstract fun onRegistrationFailed(
+        context: Context,
+        reason: FailedReason,
+        instance: String,
+    )
 
     /**
      * This application is unregistered by the distributor from receiving push messages
      */
-    abstract fun onUnregistered(context: Context, instance: String)
+    abstract fun onUnregistered(
+        context: Context,
+        instance: String,
+    )
 
     /**
      * A new message is received. The message contains the decrypted content of the push message
      * for the instance
      */
-    abstract fun onMessage(context: Context, message: PushMessage, instance: String)
+    abstract fun onMessage(
+        context: Context,
+        message: PushMessage,
+        instance: String,
+    )
 
     /**
      * Handle UnifiedPush messages, should not be override
      */
-    override fun onReceive(context: Context, intent: Intent) {
+    override fun onReceive(
+        context: Context,
+        intent: Intent,
+    ) {
         val token = intent.getStringExtra(EXTRA_TOKEN)
         val store = Store(context)
         val keyManager = getKeyManager(context)
-        val instance = token?.let {
-            store.registrationSet.tryGetInstance(it)
-        } ?: return
-        val wakeLock = (context.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
-            newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG).apply {
-                acquire(60000L /*1min*/)
+        val instance =
+            token?.let {
+                store.registrationSet.tryGetInstance(it)
+            } ?: return
+        val wakeLock =
+            (context.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
+                newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG).apply {
+                    acquire(60000L) // 1min
+                }
             }
-        }
         when (intent.action) {
             ACTION_NEW_ENDPOINT -> {
                 val endpoint = intent.getStringExtra(EXTRA_ENDPOINT) ?: return
@@ -186,14 +205,15 @@ abstract class MessagingReceiver : BroadcastReceiver() {
             ACTION_MESSAGE -> {
                 val message = intent.getByteArrayExtra(EXTRA_BYTES_MESSAGE) ?: return
                 val id = intent.getStringExtra(EXTRA_MESSAGE_ID)
-                val pushMessage = try {
-                    keyManager.decrypt(instance, message)?.let {
-                        PushMessage(it, true)
-                    } ?: PushMessage(message, false)
-                } catch (e: GeneralSecurityException) {
-                    Log.w(TAG, "Could not decrypt message, trying with plain text. Cause: ${e.message}")
-                    PushMessage(message, false)
-                }
+                val pushMessage =
+                    try {
+                        keyManager.decrypt(instance, message)?.let {
+                            PushMessage(it, true)
+                        } ?: PushMessage(message, false)
+                    } catch (e: GeneralSecurityException) {
+                        Log.w(TAG, "Could not decrypt message, trying with plain text. Cause: ${e.message}")
+                        PushMessage(message, false)
+                    }
                 onMessage(context, pushMessage, instance)
                 store.tryGetDistributor()?.let {
                     mayAcknowledgeMessage(context, it, id, token)
@@ -211,15 +231,16 @@ abstract class MessagingReceiver : BroadcastReceiver() {
         context: Context,
         distributor: String,
         id: String?,
-        token: String
+        token: String,
     ) {
         id?.let {
-            val broadcastIntent = Intent().apply {
-                `package` = distributor
-                action = ACTION_MESSAGE_ACK
-                putExtra(EXTRA_TOKEN, token)
-                putExtra(EXTRA_MESSAGE_ID, it)
-            }
+            val broadcastIntent =
+                Intent().apply {
+                    `package` = distributor
+                    action = ACTION_MESSAGE_ACK
+                    putExtra(EXTRA_TOKEN, token)
+                    putExtra(EXTRA_MESSAGE_ID, it)
+                }
             context.sendBroadcast(broadcastIntent)
         }
     }
