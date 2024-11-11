@@ -521,6 +521,9 @@ object UnifiedPush {
      * Get the distributor registered by the user, but the
      * distributor may not have respond yet to our requests. Most of the time [getAckDistributor] is preferred.
      *
+     * Will call [MessagingReceiver.onUnregistered] for all instances if the distributor
+     * is not installed anymore.
+     *
      * @return The distributor package name if any, else null
      */
     @JvmStatic
@@ -529,6 +532,9 @@ object UnifiedPush {
     /**
      * Get the distributor registered by the user, and the
      * distributor has already respond to our requests
+     *
+     * Will call [MessagingReceiver.onUnregistered] for all instances if the distributor
+     * is not installed anymore.
      *
      * @return The distributor package name if any, else null
      */
