@@ -304,18 +304,31 @@ object UnifiedPush {
                 store.removeDistributor()
                 return
             }
+
+        // For SDK < 34
+        val dummyIntent = Intent("org.unifiedpush.dummy_app")
+        val pi = PendingIntent.getBroadcast(context, 0, dummyIntent, PendingIntent.FLAG_IMMUTABLE)
+
         val token = store.registrationSet.tryGetToken(instance) ?: return
         val broadcastIntent =
             Intent().apply {
                 `package` = distributor
                 action = ACTION_UNREGISTER
                 putExtra(EXTRA_TOKEN, token)
+                // For SDK < 34
+                putExtra(EXTRA_PI, pi)
             }
         store.registrationSet.removeInstance(instance, keyManager).ifEmpty {
             store.removeDistributor()
         }
         store.removeDistributor()
-        context.sendBroadcast(broadcastIntent)
+
+        if (Build.VERSION.SDK_INT >= 34) {
+            val broadcastOptions = BroadcastOptions.makeBasic().setShareIdentityEnabled(true)
+            context.sendBroadcast(broadcastIntent, null, broadcastOptions.toBundle())
+        } else {
+            context.sendBroadcast(broadcastIntent)
+        }
     }
 
     /**
