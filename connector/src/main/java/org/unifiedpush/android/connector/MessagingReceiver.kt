@@ -12,6 +12,8 @@ import org.unifiedpush.android.connector.keys.KeyManager
 import java.security.GeneralSecurityException
 
 /**
+ * @hide
+ *
  * Receive UnifiedPush messages (new endpoints, unregistrations, push messages, errors) from the distributors
  *
  * ## Expose a receiver
@@ -110,8 +112,8 @@ abstract class MessagingReceiver : BroadcastReceiver() {
     /**
      * Define the [KeyManager] to use. [DefaultKeyManager] by default.
      *
-     * If you wish to change the [KeyManager], you need to call [UnifiedPush.registerApp],
-     * [UnifiedPush.unregisterApp] and [UnifiedPush.forceRemoveDistributor] with the same
+     * If you wish to change the [KeyManager], you need to call [UnifiedPush.register],
+     * [UnifiedPush.unregister] and [UnifiedPush.removeDistributor] with the same
      * KeyManager.
      *
      * @return a [KeyManager]

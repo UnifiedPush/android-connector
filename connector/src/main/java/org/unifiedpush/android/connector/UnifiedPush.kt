@@ -34,7 +34,7 @@ import kotlin.jvm.Throws
  * Therefore, you can use [tryUseCurrentOrDefaultDistributor][org.unifiedpush.android.connector.UnifiedPush.tryUseCurrentOrDefaultDistributor]
  * to select the saved distributor or the default one when your application starts (when your main activity is created for instance).
  *
- * When the distributor is saved, you can call [`registerApp`][org.unifiedpush.android.connector.UnifiedPush.registerApp] to request a new registration.
+ * When the distributor is saved, you can call [`registerApp`][org.unifiedpush.android.connector.UnifiedPush.register] to request a new registration.
  * It has optional parameters, the following example uses `messageForDistributor` and `vapid`.
  * You can use `instance` to bring multiple-registration support to your application.
  *
@@ -101,9 +101,9 @@ import kotlin.jvm.Throws
  * For this, you can get the list of available distributors with [`getDistributors`][org.unifiedpush.android.connector.UnifiedPush.getDistributors].
  *
  * Once the user has chosen the distributor, you have to save it with [`saveDistributor`][org.unifiedpush.android.connector.UnifiedPush.saveDistributor].
- * This function must be called before [`registerApp`][org.unifiedpush.android.connector.UnifiedPush.registerApp].
+ * This function must be called before [`registerApp`][org.unifiedpush.android.connector.UnifiedPush.register].
  *
- * When the distributor is saved, you can call [`registerApp`][org.unifiedpush.android.connector.UnifiedPush.registerApp] to request a new registration.
+ * When the distributor is saved, you can call [`registerApp`][org.unifiedpush.android.connector.UnifiedPush.register] to request a new registration.
  * It has optional parameters, the following example uses `messageForDistributor` and `vapid`.
  * You can use `instance` to bring multiple-registration support to your application.
  *
@@ -162,7 +162,7 @@ import kotlin.jvm.Throws
  *
  * ### Unsubscribe
  *
- * To unsubscribe, simply call [`unregisterApp`][org.unifiedpush.android.connector.UnifiedPush.unregisterApp]. Set the instance you want to unsubscribed to if you used one during registration.
+ * To unsubscribe, simply call [`unregisterApp`][org.unifiedpush.android.connector.UnifiedPush.unregister]. Set the instance you want to unsubscribed to if you used one during registration.
  *
  * It removes the distributor if this is the last instance to unregister.
  */
@@ -188,22 +188,33 @@ object UnifiedPush {
      * @throws [VapidNotValidException] if [vapid] is not in the in the uncompressed form and base64url encoded.
      */
     @JvmStatic
-    fun registerApp(
+    fun register(
         context: Context,
         instance: String = INSTANCE_DEFAULT,
         messageForDistributor: String? = null,
         vapid: String? = null,
     ) {
-        registerApp(context, instance, messageForDistributor, vapid, DefaultKeyManager(context))
+        register(context, instance, messageForDistributor, vapid, DefaultKeyManager(context))
     }
 
+    /** @hide */
+    @Deprecated("Renamed",
+        replaceWith = ReplaceWith("UnifiedPush.register(context, instance, messageForDistributor, vapid)"))
+    @JvmStatic
+    fun registerApp(
+        context: Context,
+        instance: String = INSTANCE_DEFAULT,
+        messageForDistributor: String? = null,
+        vapid: String? = null,
+    ) = register(context, instance, messageForDistributor, vapid)
+
     /**
-     * [registerApp] with additional [KeyManager] parameter.
+     * [register] with additional [KeyManager] parameter.
      *
      * @param [keyManager] To manager web push keys. By default: [DefaultKeyManager].
      */
     @JvmStatic
-    fun registerApp(
+    fun register(
         context: Context,
         instance: String = INSTANCE_DEFAULT,
         messageForDistributor: String? = null,
@@ -211,7 +222,7 @@ object UnifiedPush {
         keyManager: KeyManager,
     ) {
         val store = Store(context)
-        registerApp(
+        register(
             context,
             store,
             store.registrationSet.newOrUpdate(
@@ -225,7 +236,7 @@ object UnifiedPush {
 
     @JvmStatic
     @Throws(VapidNotValidException::class)
-    private fun registerApp(
+    private fun register(
         context: Context,
         store: Store,
         registration: Registration,
@@ -278,20 +289,28 @@ object UnifiedPush {
      * @param [instance] Registration instance. Can be used to get multiple registrations, eg. for multi-account support.
      */
     @JvmStatic
-    fun unregisterApp(
+    fun unregister(
         context: Context,
         instance: String = INSTANCE_DEFAULT,
     ) {
-        unregisterApp(context, instance, DefaultKeyManager(context))
+        unregister(context, instance, DefaultKeyManager(context))
     }
 
+    /** @hide */
+    @Deprecated("Renamed", replaceWith = ReplaceWith("UnifiedPush.unregister(context, instance)"))
+    @JvmStatic
+    fun unregisterApp(
+        context: Context,
+        instance: String = INSTANCE_DEFAULT
+    ) = unregister(context, instance)
+
     /**
-     * [unregisterApp] with additional [KeyManager] parameter.
+     * [unregister] with additional [KeyManager] parameter.
      *
      * @param [keyManager] To manager web push keys. By default: [DefaultKeyManager].
      */
     @JvmStatic
-    fun unregisterApp(
+    fun unregister(
         context: Context,
         instance: String = INSTANCE_DEFAULT,
         keyManager: KeyManager,
@@ -355,7 +374,7 @@ object UnifiedPush {
     }
 
     @JvmStatic
-    private fun getResolveInfo(
+    internal fun getResolveInfo(
         context: Context,
         action: String,
         packageName: String? = null,
@@ -634,23 +653,28 @@ object UnifiedPush {
      * @param [context] To interact with the shared preferences and send broadcast intents.
      */
     @JvmStatic
-    fun forceRemoveDistributor(context: Context) {
-        forceRemoveDistributor(context, DefaultKeyManager(context))
+    fun removeDistributor(context: Context) {
+        removeDistributor(context, DefaultKeyManager(context))
     }
 
+    /** @hide */
+    @Deprecated("Renamed", replaceWith = ReplaceWith("UnifiedPush.removeDistributor(context)"))
+    @JvmStatic
+    fun forceRemoveDistributor(context: Context) = removeDistributor(context)
+
     /**
-     * [forceRemoveDistributor] with additional [KeyManager] parameter.
+     * [removeDistributor] with additional [KeyManager] parameter.
      *
      * @param [keyManager] To manager web push keys. By default: [DefaultKeyManager].
      */
     @JvmStatic
-    fun forceRemoveDistributor(
+    fun removeDistributor(
         context: Context,
         keyManager: KeyManager,
     ) {
         val store = Store(context)
         store.registrationSet.forEachInstance {
-            unregisterApp(context, it)
+            unregister(context, it)
         }
         store.registrationSet.removeInstances(keyManager)
         store.removeDistributor()

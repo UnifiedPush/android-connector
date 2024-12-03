@@ -1,7 +1,7 @@
 package org.unifiedpush.android.connector
 
 /**
- * A [registration request][UnifiedPush.registerApp] may fail for different reasons.
+ * A [registration request][UnifiedPush.register] may fail for different reasons.
  */
 enum class FailedReason {
     /**
@@ -20,7 +20,7 @@ enum class FailedReason {
     ACTION_REQUIRED,
 
     /**
-     * The distributor requires a VAPID key and you didn't provide one during [registration][UnifiedPush.registerApp].
+     * The distributor requires a VAPID key and you didn't provide one during [registration][UnifiedPush.register].
      */
     VAPID_REQUIRED,
 }
