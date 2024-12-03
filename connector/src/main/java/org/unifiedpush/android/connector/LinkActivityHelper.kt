@@ -68,7 +68,7 @@ class LinkActivityHelper(private val activity: Activity) {
     /**
      * Process result from the distributor's activity
      *
-     * You have to call [UnifiedPush.registerApp] for all your registrations if this returns `true`.
+     * You have to call [UnifiedPush.register] for all your registrations if this returns `true`.
      *
      * @return `true` if the [requestCode] matches the one of the request and the [resultCode]
      *  is OK and the [data] contains the PendingIntent to identify the distributor packageName.
