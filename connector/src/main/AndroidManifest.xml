@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
@@ -16,11 +17,22 @@
     </queries>
 
     <application>
-        <service android:exported="true" android:name="org.unifiedpush.android.connector.RaiseToForegroundService">
+        <service android:exported="true" android:name="org.unifiedpush.android.connector.RaiseToForegroundService"
+            tools:ignore="ExportedService">
             <intent-filter>
                 <action android:name="org.unifiedpush.android.distributor.RAISE_TO_FOREGROUND" />
             </intent-filter>
         </service>
         <activity android:name="org.unifiedpush.android.connector.LinkActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" />
+        <receiver android:exported="true"  android:enabled="true"
+            android:name="org.unifiedpush.android.connector.MessagingReceiverImpl"
+            tools:ignore="ExportedReceiver">
+            <intent-filter android:priority="-500">
+                <action android:name="org.unifiedpush.android.connector.MESSAGE"/>
+                <action android:name="org.unifiedpush.android.connector.UNREGISTERED"/>
+                <action android:name="org.unifiedpush.android.connector.NEW_ENDPOINT"/>
+                <action android:name="org.unifiedpush.android.connector.REGISTRATION_FAILED"/>
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>
