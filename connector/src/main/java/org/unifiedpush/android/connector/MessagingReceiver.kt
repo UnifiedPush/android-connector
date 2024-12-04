@@ -3,7 +3,6 @@ package org.unifiedpush.android.connector
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.PowerManager
 import android.util.Log
 import org.unifiedpush.android.connector.data.PushEndpoint
 import org.unifiedpush.android.connector.data.PushMessage
@@ -175,12 +174,7 @@ abstract class MessagingReceiver : BroadcastReceiver() {
             token?.let {
                 store.registrationSet.tryGetInstance(it)
             } ?: return
-        val wakeLock =
-            (context.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
-                newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG).apply {
-                    acquire(60000L) // 1min
-                }
-            }
+        val wakeLock = WakeLock(context)
         when (intent.action) {
             ACTION_NEW_ENDPOINT -> {
                 val endpoint = intent.getStringExtra(EXTRA_ENDPOINT) ?: return
@@ -222,11 +216,7 @@ abstract class MessagingReceiver : BroadcastReceiver() {
                 }
             }
         }
-        wakeLock?.let {
-            if (it.isHeld) {
-                it.release()
-            }
-        }
+        wakeLock.release()
     }
 
     private fun mayAcknowledgeMessage(
