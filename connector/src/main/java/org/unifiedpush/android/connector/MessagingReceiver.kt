@@ -11,88 +11,19 @@ import org.unifiedpush.android.connector.keys.KeyManager
 import java.security.GeneralSecurityException
 
 /**
- * @hide
+ * **Deprecated**, please use [PushService] instead.
  *
  * Receive UnifiedPush messages (new endpoints, unregistrations, push messages, errors) from the distributors
  *
- * ## Expose a receiver
+ * ## Deprecation note
+ * The library already embed a receiver implementing this receiver and forward the events to a service. This
+ * allow us to maintain the declaration of the exposed service, which can make maintenance easier if any change
+ * is required in the future.
  *
- * <!-- Note: This must be mirrored in Module.md -->
+ * It is still possible to use this receiver directly: if a receiver with this intent filter is declared
+ * in your manifest, the one declared in the library won't run.
  *
- * You need to expose a receiver that extend [`MessagingReceiver`][org.unifiedpush.android.connector.MessagingReceiver] and override the following methods:
- * - [onMessage][org.unifiedpush.android.connector.MessagingReceiver.onMessage]
- * - [onNewEndpoint][org.unifiedpush.android.connector.MessagingReceiver.onNewEndpoint]
- * - [onUnregistered][org.unifiedpush.android.connector.MessagingReceiver.onUnregistered]
- * - [onRegistrationFailed][org.unifiedpush.android.connector.MessagingReceiver.onRegistrationFailed]
- *
- * <div class="tabs">
- * <input class="tabs_control hidden" type="radio" id="tabs-0-receiver-0" name="tabs-0" checked>
- * <label class="tabs_label" for="tabs-0-receiver-0">Kotlin</label>
- * <div class="tabs_content">
- * <!-- CONTENT KOTLIN -->
- *
- * ```kotlin
- * class CustomReceiver: MessagingReceiver() {
- *     override fun onMessage(context: Context, message: PushMessage, instance: String) {
- *         // TODO: handle message, eg. to sync remote data or show a notification to the user
- *     }
- *
- *     override fun onNewEndpoint(context: Context, endpoint: PushEndpoint, instance: String) {
- *         // TODO: send new endpoint to the app server
- *     }
- *
- *     override fun onRegistrationFailed(context: Context, reason: FailedReason, instance: String) {
- *         // TODO: retry depending on the reason
- *     }
- *
- *     override fun onUnregistered(context: Context, instance: String){
- *         // TODO: ask to register to another distributor
- *     }
- * }
- * ```
- *
- * <!-- END KOTLIN -->
- * </div>
- * <input class="tabs_control hidden" type="radio" id="tabs-0-receiver-1" name="tabs-0">
- * <label class="tabs_label" for="tabs-0-receiver-1">Java</label>
- * <div class="tabs_content">
- * <!-- CONTENT JAVA -->
- *
- * ```java
- * class CustomReceiver extends MessagingReceiver {
- *     public CustomReceiver() {
- *         super();
- *     }
- *
- *     @Override
- *     public void onMessage(@NotNull Context context, @NotNull PushMessage message, @NotNull String instance) {
- *         // TODO: handle message, eg. to sync remote data or show a notification to the user
- *     }
- *
- *     @Override
- *     public void onNewEndpoint(@NotNull Context context, @NotNull PushEndpoint endpoint, @NotNull String instance) {
- *         // TODO: send new endpoint to the app server
- *     }
- *
- *     @Override
- *     public void onRegistrationFailed(@NotNull Context context, @NotNull FailedReason reason, @NotNull String instance) {
- *         // TODO: retry depending on the reason
- *     }
- *
- *     @Override
- *     public void onUnregistered(@NotNull Context context, @NotNull String instance) {
- *         // TODO: ask to register to another distributor
- *     }
- * }
- * ```
- *
- * <!-- END JAVA -->
- * </div>
- * </div>
- *
- * ## Edit your manifest
- *
- * <!-- Note: This must be mirrored in Module.md -->
+ * ## Expose this receiver
  *
  * The receiver has to be exposed in the `AndroidManifest.xml` in order to receive the UnifiedPush messages.
  *
