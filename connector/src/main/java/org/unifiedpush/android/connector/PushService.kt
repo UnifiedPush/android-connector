@@ -67,7 +67,17 @@ abstract class PushService: Service() {
      * Works only within the app
      */
     inner class PushBinder: Binder() {
-        fun getService(): PushService { return this@PushService }
+        /**
+         * Get [PushService]
+         *
+         * @throws SecurityException if not called within the app
+         */
+        fun getService(): PushService {
+            if (getCallingUid() != android.os.Process.myUid()) {
+                throw SecurityException("Binding allowed only within the app")
+            }
+            return this@PushService
+        }
     }
 
     internal companion object {
