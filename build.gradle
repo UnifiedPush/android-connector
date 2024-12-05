@@ -45,6 +45,7 @@ def setDokkaBase(task) {
     task.pluginsMapConfiguration.set(
             ["org.jetbrains.dokka.base.DokkaBase": dokkaBaseConfiguration]
     )
+    task.suppressInheritedMembers = true
 }
 
 def setDokkaTask(task) {
