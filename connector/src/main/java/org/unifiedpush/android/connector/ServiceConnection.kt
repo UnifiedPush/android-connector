@@ -9,11 +9,28 @@ import android.util.Log
 import org.unifiedpush.android.connector.data.PushEndpoint
 import org.unifiedpush.android.connector.data.PushMessage
 import java.util.LinkedList
+import java.util.Timer
+import kotlin.concurrent.schedule
 
 internal object ServiceConnection {
+
+    /** Static instance of the [PushService] */
     private lateinit var mService: PushService
+
+    /**
+     * If we are binding to [PushService.PushBinder] to store the [PushService]
+     * In this case, new event should be added to the [eventsQueue]
+     */
     private var binding: Boolean = false
-    private var mBound: Boolean = false
+
+    /**
+     * If [mService] has been connected
+     */
+    private var connected: Boolean = false
+
+    /**
+     * Queues of events, if we are binding to the service
+     */
     private var eventsQueue = LinkedList<Event>()
 
     private val connection = object : ServiceConnection {
@@ -23,7 +40,7 @@ internal object ServiceConnection {
             val binder = service as PushService.PushBinder
             mService = binder.getService()
             synchronized(this@ServiceConnection) {
-                mBound = true
+                connected = true
                 binding = false
             }
             handlePendingEvents()
@@ -32,13 +49,18 @@ internal object ServiceConnection {
         override fun onServiceDisconnected(arg0: ComponentName) {
             Log.d(TAG, "Service is disconnected")
             synchronized(this@ServiceConnection) {
-                mBound = false
+                connected = false
                 binding = false
             }
         }
     }
 
+    /**
+     * Bind to [PushService] with application context to store it in a static object,
+     * and unbind 1 second later
+     */
     private fun bind(context: Context) {
+        Log.d(TAG, "Binding to PushService")
         val context = context.applicationContext
         Intent().apply {
             action = PushService.ACTION_PUSH_EVENT
@@ -46,12 +68,10 @@ internal object ServiceConnection {
         }.also { intent ->
             context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
         }
-    }
-
-    fun stop(context: Context) {
-        val context = context.applicationContext
-        context.unbindService(connection)
-        mBound = false
+        Timer().schedule(1_000L) {
+            Log.d(TAG, "Unbinding")
+            context.unbindService(connection)
+        }
     }
 
     sealed class Event {
@@ -72,10 +92,10 @@ internal object ServiceConnection {
 
     fun sendEvent(context: Context, event: Event) {
         var shouldBind = false
-        var bound: Boolean
+        var connected: Boolean
         synchronized(this) {
-            bound = mBound
-            if (!mBound) {
+            connected = ServiceConnection.connected
+            if (!connected) {
                 eventsQueue.add(event)
                 if (!binding) {
                     binding = true
@@ -83,12 +103,12 @@ internal object ServiceConnection {
                 }
             }
         }
-        if (shouldBind) {
-            bind(context)
-        } else if (bound) {
+        if (connected) {
             event.handle()
+        } else if (shouldBind) {
+            bind(context)
         } else {
-            Log.d(TAG, "Even has been added to the queue")
+            Log.d(TAG, "Event has been added to the queue")
         }
     }
 
