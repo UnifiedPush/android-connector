@@ -1,8 +1,9 @@
-package org.unifiedpush.android.connector
+package org.unifiedpush.android.connector.internal
 
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import org.unifiedpush.android.connector.LinkActivityHelper
 
 /**
  * @hide

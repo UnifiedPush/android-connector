@@ -1,4 +1,4 @@
-package org.unifiedpush.android.connector
+package org.unifiedpush.android.connector.internal
 
 import android.content.ComponentName
 import android.content.Context
@@ -6,13 +6,16 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
+import org.unifiedpush.android.connector.FailedReason
+import org.unifiedpush.android.connector.PushService
+import org.unifiedpush.android.connector.TAG
 import org.unifiedpush.android.connector.data.PushEndpoint
 import org.unifiedpush.android.connector.data.PushMessage
 import java.util.LinkedList
 import java.util.Timer
 import kotlin.concurrent.schedule
 
-internal object ServiceConnection {
+internal object InternalPushServiceConnection {
 
     /** Static instance of the [PushService] */
     private lateinit var mService: PushService
@@ -39,7 +42,7 @@ internal object ServiceConnection {
             Log.d(TAG, "Service is connected")
             val binder = service as PushService.PushBinder
             mService = binder.getService()
-            synchronized(this@ServiceConnection) {
+            synchronized(this@InternalPushServiceConnection) {
                 connected = true
                 binding = false
             }
@@ -48,7 +51,7 @@ internal object ServiceConnection {
 
         override fun onServiceDisconnected(arg0: ComponentName) {
             Log.d(TAG, "Service is disconnected")
-            synchronized(this@ServiceConnection) {
+            synchronized(this@InternalPushServiceConnection) {
                 connected = false
                 binding = false
             }
@@ -94,7 +97,7 @@ internal object ServiceConnection {
         var shouldBind = false
         var connected: Boolean
         synchronized(this) {
-            connected = ServiceConnection.connected
+            connected = InternalPushServiceConnection.connected
             if (!connected) {
                 eventsQueue.add(event)
                 if (!binding) {

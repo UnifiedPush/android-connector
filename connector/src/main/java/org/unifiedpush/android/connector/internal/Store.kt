@@ -1,7 +1,10 @@
-package org.unifiedpush.android.connector
+package org.unifiedpush.android.connector.internal
 
 import android.content.Context
 import android.content.SharedPreferences
+import org.unifiedpush.android.connector.PREF_MASTER
+import org.unifiedpush.android.connector.PREF_MASTER_DISTRIBUTOR
+import org.unifiedpush.android.connector.PREF_MASTER_DISTRIBUTOR_ACK
 
 internal class Store(context: Context) {
     var registrationSet: RegistrationSet

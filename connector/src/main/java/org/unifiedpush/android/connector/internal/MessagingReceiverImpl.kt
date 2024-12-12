@@ -1,7 +1,11 @@
-package org.unifiedpush.android.connector
+package org.unifiedpush.android.connector.internal
 
 import android.content.Context
 import android.content.Intent
+import org.unifiedpush.android.connector.ACTION_MESSAGE
+import org.unifiedpush.android.connector.FailedReason
+import org.unifiedpush.android.connector.MessagingReceiver
+import org.unifiedpush.android.connector.UnifiedPush
 import org.unifiedpush.android.connector.data.PushEndpoint
 import org.unifiedpush.android.connector.data.PushMessage
 
@@ -14,30 +18,30 @@ import org.unifiedpush.android.connector.data.PushMessage
  */
 class MessagingReceiverImpl : MessagingReceiver() {
     override fun onUnregistered(context: Context, instance: String) {
-        ServiceConnection.sendEvent(
+        InternalPushServiceConnection.sendEvent(
             context,
-            ServiceConnection.Event.Unregistered(instance)
+            InternalPushServiceConnection.Event.Unregistered(instance)
         )
     }
 
     override fun onMessage(context: Context, message: PushMessage, instance: String) {
-        ServiceConnection.sendEvent(
+        InternalPushServiceConnection.sendEvent(
             context,
-            ServiceConnection.Event.Message(message, instance)
+            InternalPushServiceConnection.Event.Message(message, instance)
         )
     }
 
     override fun onNewEndpoint(context: Context, endpoint: PushEndpoint, instance: String) {
-        ServiceConnection.sendEvent(
+        InternalPushServiceConnection.sendEvent(
             context,
-            ServiceConnection.Event.NewEndpoint(endpoint, instance)
+            InternalPushServiceConnection.Event.NewEndpoint(endpoint, instance)
         )
     }
 
     override fun onRegistrationFailed(context: Context, reason: FailedReason, instance: String) {
-        ServiceConnection.sendEvent(
+        InternalPushServiceConnection.sendEvent(
             context,
-            ServiceConnection.Event.RegistrationFailed(reason, instance)
+            InternalPushServiceConnection.Event.RegistrationFailed(reason, instance)
         )
     }
 
@@ -55,7 +59,8 @@ class MessagingReceiverImpl : MessagingReceiver() {
      * @return `true` if there isn't any implementation of [MessagingReceiver] with priority >-500
      */
     private fun shouldRun(context: Context): Boolean {
-        return shouldRun ?: UnifiedPush.getResolveInfo(context, ACTION_MESSAGE, context.packageName).none {
+        return shouldRun ?: UnifiedPush.getResolveInfo(context, ACTION_MESSAGE, context.packageName)
+            .none {
             it.priority > -500
         }.also {
             shouldRun = it

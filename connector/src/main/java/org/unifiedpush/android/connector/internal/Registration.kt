@@ -1,9 +1,16 @@
-package org.unifiedpush.android.connector
+package org.unifiedpush.android.connector.internal
 
 import android.content.SharedPreferences
+import org.unifiedpush.android.connector.PREF_CONNECTOR_MESSAGE
+import org.unifiedpush.android.connector.PREF_CONNECTOR_TOKEN
+import org.unifiedpush.android.connector.PREF_CONNECTOR_VAPID
+import org.unifiedpush.android.connector.PREF_MASTER_INSTANCES
 import org.unifiedpush.android.connector.keys.KeyManager
 import java.util.UUID
 
+/**
+ * Internal object for a [Registration]
+ */
 internal class Registration(
     val instance: String,
     val token: String,
@@ -11,6 +18,7 @@ internal class Registration(
     var vapid: String?,
 ) {
     companion object {
+        /** Restore or save new [Registration] from the shared pref */
         internal fun newOrUpdate(
             preferences: SharedPreferences,
             instance: String,

@@ -1,4 +1,4 @@
-package org.unifiedpush.android.connector
+package org.unifiedpush.android.connector.internal
 
 import android.app.Service
 import android.content.Intent

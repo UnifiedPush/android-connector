@@ -10,6 +10,9 @@ import android.content.pm.ResolveInfo
 import android.os.Build
 import android.util.AndroidException
 import android.util.Log
+import org.unifiedpush.android.connector.internal.LinkActivity
+import org.unifiedpush.android.connector.internal.Registration
+import org.unifiedpush.android.connector.internal.Store
 import org.unifiedpush.android.connector.keys.DefaultKeyManager
 import org.unifiedpush.android.connector.keys.KeyManager
 import kotlin.jvm.Throws

@@ -23,9 +23,9 @@
                 <action android:name="org.unifiedpush.android.distributor.RAISE_TO_FOREGROUND" />
             </intent-filter>
         </service>
-        <activity android:name="org.unifiedpush.android.connector.LinkActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" />
+        <activity android:name="org.unifiedpush.android.connector.internal.LinkActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" />
         <receiver android:exported="true"  android:enabled="true"
-            android:name="org.unifiedpush.android.connector.MessagingReceiverImpl"
+            android:name="org.unifiedpush.android.connector.internal.MessagingReceiverImpl"
             tools:ignore="ExportedReceiver">
             <intent-filter android:priority="-500">
                 <action android:name="org.unifiedpush.android.connector.MESSAGE"/>

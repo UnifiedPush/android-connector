@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.util.Log
+import org.unifiedpush.android.connector.internal.Store
 
 /**
  * Helper with functions to request the distributor's link activity for result and process the result

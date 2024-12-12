@@ -6,6 +6,8 @@ import android.content.Intent
 import android.util.Log
 import org.unifiedpush.android.connector.data.PushEndpoint
 import org.unifiedpush.android.connector.data.PushMessage
+import org.unifiedpush.android.connector.internal.Store
+import org.unifiedpush.android.connector.internal.WakeLock
 import org.unifiedpush.android.connector.keys.DefaultKeyManager
 import org.unifiedpush.android.connector.keys.KeyManager
 import java.security.GeneralSecurityException

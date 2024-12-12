@@ -1,8 +1,18 @@
-package org.unifiedpush.android.connector
+package org.unifiedpush.android.connector.internal
 
 import android.content.SharedPreferences
+import org.unifiedpush.android.connector.PREF_CONNECTOR_AUTH
+import org.unifiedpush.android.connector.PREF_CONNECTOR_MESSAGE
+import org.unifiedpush.android.connector.PREF_CONNECTOR_PRIVKEY
+import org.unifiedpush.android.connector.PREF_CONNECTOR_PUBKEY
+import org.unifiedpush.android.connector.PREF_CONNECTOR_TOKEN
+import org.unifiedpush.android.connector.PREF_CONNECTOR_VAPID
+import org.unifiedpush.android.connector.PREF_MASTER_INSTANCES
 import org.unifiedpush.android.connector.keys.KeyManager
 
+/**
+ * Internal Set of [Registration]
+ */
 internal class RegistrationSet(private val preferences: SharedPreferences) {
     internal fun tryGetToken(instance: String): String? {
         return synchronized(registrationLock) {
@@ -17,7 +27,13 @@ internal class RegistrationSet(private val preferences: SharedPreferences) {
         keyManager: KeyManager,
     ): Registration {
         return synchronized(registrationLock) {
-            Registration.newOrUpdate(preferences, instance, messageForDistributor, vapid, keyManager)
+            Registration.newOrUpdate(
+                preferences,
+                instance,
+                messageForDistributor,
+                vapid,
+                keyManager
+            )
         }
     }
 

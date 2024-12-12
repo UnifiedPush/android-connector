@@ -1,9 +1,10 @@
-package org.unifiedpush.android.connector
+package org.unifiedpush.android.connector.internal
 
 import android.content.Context
 import android.os.PowerManager
+import org.unifiedpush.android.connector.WAKE_LOCK_TAG
 
-class WakeLock(context: Context) {
+internal class WakeLock(context: Context) {
     private val lock = (context.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
         newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG).apply {
             /*
