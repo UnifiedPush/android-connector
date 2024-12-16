@@ -90,10 +90,9 @@ class LinkActivityHelper(private val activity: Activity) {
                 // targetPackage has been renamed creatorPackage after SDK 17
             }?.targetPackage?.let {
                 Log.d(TAG, "Using distributor $it.")
-                val store =
-                    Store(activity).apply {
-                        saveDistributor(it)
-                    }
+                Store(activity).apply {
+                    saveDistributor(it)
+                }
                 return true
             } ?: run {
                 Log.d(TAG, "Could not find creator of pending intent")
