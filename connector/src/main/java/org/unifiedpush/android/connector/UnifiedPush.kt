@@ -37,7 +37,7 @@ import kotlin.jvm.Throws
  * Therefore, you can use [tryUseCurrentOrDefaultDistributor][org.unifiedpush.android.connector.UnifiedPush.tryUseCurrentOrDefaultDistributor]
  * to select the saved distributor or the default one when your application starts (when your main activity is created for instance).
  *
- * When the distributor is saved, you can call [`registerApp`][org.unifiedpush.android.connector.UnifiedPush.register] to request a new registration.
+ * When the distributor is saved, you can call [`register`][org.unifiedpush.android.connector.UnifiedPush.register] to request a new registration.
  * It has optional parameters, the following example uses `messageForDistributor` and `vapid`.
  * You can use `instance` to bring multiple-registration support to your application.
  *
@@ -58,7 +58,7 @@ import kotlin.jvm.Throws
  *     if (success) {
  *         // We have a distributor
  *         // Register your app to the distributor
- *         UnifiedPush.registerApp(context, messageForDistributor, vapid)
+ *         UnifiedPush.register(context, messageForDistributor, vapid)
  *     }
  * }
  * ```
@@ -79,7 +79,7 @@ import kotlin.jvm.Throws
  *     if (success) {
  *         // We have a distributor
  *         // Register your app to the distributor
- *         UnifiedPush.registerApp(
+ *         UnifiedPush.register(
  *             context,
  *             INSTANCE_DEFAULT,
  *             messageForDistributor,
@@ -104,9 +104,9 @@ import kotlin.jvm.Throws
  * For this, you can get the list of available distributors with [`getDistributors`][org.unifiedpush.android.connector.UnifiedPush.getDistributors].
  *
  * Once the user has chosen the distributor, you have to save it with [`saveDistributor`][org.unifiedpush.android.connector.UnifiedPush.saveDistributor].
- * This function must be called before [`registerApp`][org.unifiedpush.android.connector.UnifiedPush.register].
+ * This function must be called before [`register`][org.unifiedpush.android.connector.UnifiedPush.register].
  *
- * When the distributor is saved, you can call [`registerApp`][org.unifiedpush.android.connector.UnifiedPush.register] to request a new registration.
+ * When the distributor is saved, you can call [`register`][org.unifiedpush.android.connector.UnifiedPush.register] to request a new registration.
  * It has optional parameters, the following example uses `messageForDistributor` and `vapid`.
  * You can use `instance` to bring multiple-registration support to your application.
  *
@@ -130,7 +130,7 @@ import kotlin.jvm.Throws
  * // save the distributor
  * UnifiedPush.saveDistributor(context, userDistrib)
  * // register your app to the distributor
- * UnifiedPush.registerApp(context, messageForDistributor, vapid)
+ * UnifiedPush.register(context, messageForDistributor, vapid)
  * ```
  *
  * <!-- END KOTLIN -->
@@ -151,7 +151,7 @@ import kotlin.jvm.Throws
  * String userDistrib = yourFunc(distributors);
  * // the below line will crash the app if no distributors are available
  * UnifiedPush.saveDistributor(context, userDistrib);
- * UnifiedPush.registerApp(
+ * UnifiedPush.register(
  *     context,
  *     INSTANCE_DEFAULT,
  *     messageForDistributor,
@@ -165,7 +165,7 @@ import kotlin.jvm.Throws
  *
  * ### Unsubscribe
  *
- * To unsubscribe, simply call [`unregisterApp`][org.unifiedpush.android.connector.UnifiedPush.unregister]. Set the instance you want to unsubscribed to if you used one during registration.
+ * To unsubscribe, simply call [`unregister`][org.unifiedpush.android.connector.UnifiedPush.unregister]. Set the instance you want to unsubscribed to if you used one during registration.
  *
  * It removes the distributor if this is the last instance to unregister.
  */
@@ -425,7 +425,7 @@ object UnifiedPush {
      * ```
      * tryUseDefaultDistributor(context) { success ->
      *     if (success) {
-     *         //TODO: registerApp
+     *         //TODO: register
      *     }
      * }
      * ```
@@ -434,7 +434,7 @@ object UnifiedPush {
      * ```
      * UnifiedPush.tryUseDefaultDistributor(context, success -> {
      *     if (success) {
-     *         //TODO: registerApp
+     *         //TODO: register
      *     }
      *     return null;
      * });
@@ -498,7 +498,7 @@ object UnifiedPush {
      * ```
      * tryUseCurrentOrDefaultDistributor(context) { success ->
      *     if (success) {
-     *         //TODO: registerApp
+     *         //TODO: register
      *     }
      * }
      * ```
@@ -507,7 +507,7 @@ object UnifiedPush {
      * ```
      * UnifiedPush.tryUseCurrentOrDefaultDistributor(context, success -> {
      *     if (success) {
-     *         //TODO: registerApp
+     *         //TODO: register
      *     }
      *     return null;
      * });

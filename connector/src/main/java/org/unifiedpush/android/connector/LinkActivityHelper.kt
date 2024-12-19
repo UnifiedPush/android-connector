@@ -34,7 +34,7 @@ import org.unifiedpush.android.connector.internal.Store
  *
  *     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
  *         if (helper.onLinkActivityResult(requestCode, resultCode, data)) {
- *             // The distributor is saved, you can request registrations with UnifiedPush.registerApp now
+ *             // The distributor is saved, you can request registrations with UnifiedPush.register now
  *         } else {
  *            // An error occurred, consider no distributor found for the moment
  *         }
