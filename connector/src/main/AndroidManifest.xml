@@ -17,7 +17,7 @@
     </queries>
 
     <application>
-        <service android:exported="true" android:name="org.unifiedpush.android.connector.RaiseToForegroundService"
+        <service android:exported="true" android:name="org.unifiedpush.android.connector.internal.RaiseToForegroundService"
             tools:ignore="ExportedService">
             <intent-filter>
                 <action android:name="org.unifiedpush.android.distributor.RAISE_TO_FOREGROUND" />
