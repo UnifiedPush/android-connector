@@ -20,7 +20,7 @@
         <service android:exported="true" android:name="org.unifiedpush.android.connector.internal.RaiseToForegroundService"
             tools:ignore="ExportedService">
             <intent-filter>
-                <action android:name="org.unifiedpush.android.distributor.RAISE_TO_FOREGROUND" />
+                <action android:name="org.unifiedpush.android.connector.RAISE_TO_FOREGROUND" />
             </intent-filter>
         </service>
         <activity android:name="org.unifiedpush.android.connector.internal.LinkActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" />
