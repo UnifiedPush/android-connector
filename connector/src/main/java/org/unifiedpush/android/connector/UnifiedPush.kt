@@ -373,7 +373,7 @@ object UnifiedPush {
             return@mapNotNull it.activityInfo.packageName.also { pn ->
                 Log.d(TAG, "Found distributor with package name $pn")
             }
-        }
+        }.distinct()
     }
 
     @JvmStatic
