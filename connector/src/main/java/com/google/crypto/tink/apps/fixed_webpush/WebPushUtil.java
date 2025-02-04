@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.google.crypto.tink.apps.webpush;
+package com.google.crypto.tink.apps.fixed_webpush;
 
 import com.google.crypto.tink.subtle.Bytes;
 import com.google.crypto.tink.subtle.Hkdf;

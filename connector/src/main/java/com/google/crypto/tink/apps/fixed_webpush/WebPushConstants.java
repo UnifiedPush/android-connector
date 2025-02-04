@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.google.crypto.tink.apps.webpush;
+package com.google.crypto.tink.apps.fixed_webpush;
 
 import com.google.crypto.tink.subtle.EllipticCurves;
 import java.nio.charset.Charset;

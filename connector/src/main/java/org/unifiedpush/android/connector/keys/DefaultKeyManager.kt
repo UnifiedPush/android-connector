@@ -2,7 +2,7 @@ package org.unifiedpush.android.connector.keys
 
 import android.content.Context
 import android.os.Build
-import com.google.crypto.tink.apps.webpush.WebPushHybridDecrypt
+import com.google.crypto.tink.apps.fixed_webpush.WebPushHybridDecrypt
 import org.unifiedpush.android.connector.PREF_MASTER
 import org.unifiedpush.android.connector.data.PublicKeySet
 import java.security.interfaces.ECPrivateKey
