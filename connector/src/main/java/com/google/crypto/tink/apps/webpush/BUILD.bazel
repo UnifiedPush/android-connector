@@ -1,0 +1,40 @@
+package(default_visibility = ["//visibility:public"])
+
+licenses(["notice"])
+
+java_library(
+    name = "web_push_hybrid_decrypt",
+    srcs = ["WebPushHybridDecrypt.java"],
+    deps = [
+        ":web_push_constants",
+        ":web_push_util",
+        "@maven//:com_google_crypto_tink_tink",
+        "@maven//:com_google_errorprone_error_prone_annotations",
+    ],
+)
+
+java_library(
+    name = "web_push_util",
+    srcs = ["WebPushUtil.java"],
+    deps = [
+        ":web_push_constants",
+        "@maven//:com_google_crypto_tink_tink",
+    ],
+)
+
+java_library(
+    name = "web_push_constants",
+    srcs = ["WebPushConstants.java"],
+    deps = ["@maven//:com_google_crypto_tink_tink"],
+)
+
+java_library(
+    name = "web_push_hybrid_encrypt",
+    srcs = ["WebPushHybridEncrypt.java"],
+    deps = [
+        ":web_push_constants",
+        ":web_push_util",
+        "@maven//:com_google_crypto_tink_tink",
+        "@maven//:com_google_errorprone_error_prone_annotations",
+    ],
+)

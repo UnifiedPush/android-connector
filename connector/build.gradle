@@ -53,7 +53,10 @@ dependencies {
         dokkaHtmlPartialPlugin "org.jetbrains.dokka:android-documentation-plugin:$dokka_version"
     }
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation "com.google.crypto.tink:apps-webpush:1.11.0"
+    // We use a local version of apps-webpush until they fix the decryption:
+    // https://github.com/tink-crypto/tink-java-apps/pull/5
+    implementation "com.google.crypto.tink:tink:1.16.0" // Remove once merged
+    // implementation "com.google.crypto.tink:apps-webpush:1.11.0" // Uncomment once merged
     compileOnly 'androidx.annotation:annotation-jvm:1.9.1'
 }
 
