@@ -2,6 +2,7 @@ package org.unifiedpush.android.connector.internal
 
 import android.content.SharedPreferences
 import org.unifiedpush.android.connector.PREF_CONNECTOR_AUTH
+import org.unifiedpush.android.connector.PREF_CONNECTOR_IV
 import org.unifiedpush.android.connector.PREF_CONNECTOR_MESSAGE
 import org.unifiedpush.android.connector.PREF_CONNECTOR_PRIVKEY
 import org.unifiedpush.android.connector.PREF_CONNECTOR_PUBKEY
@@ -65,6 +66,7 @@ internal class RegistrationSet(private val preferences: SharedPreferences) {
                 .remove(PREF_CONNECTOR_TOKEN.format(instance))
                 .remove(PREF_CONNECTOR_VAPID.format(instance))
                 .remove(PREF_CONNECTOR_MESSAGE.format(instance))
+                .remove(PREF_CONNECTOR_IV.format(instance))
                 .remove(PREF_CONNECTOR_PUBKEY.format(instance))
                 .remove(PREF_CONNECTOR_PRIVKEY.format(instance))
                 .remove(PREF_CONNECTOR_AUTH.format(instance))
@@ -81,6 +83,7 @@ internal class RegistrationSet(private val preferences: SharedPreferences) {
                     .remove(PREF_CONNECTOR_TOKEN.format(instance))
                     .remove(PREF_CONNECTOR_VAPID.format(instance))
                     .remove(PREF_CONNECTOR_MESSAGE.format(instance))
+                    .remove(PREF_CONNECTOR_IV.format(instance))
                     .remove(PREF_CONNECTOR_PUBKEY.format(instance))
                     .remove(PREF_CONNECTOR_PRIVKEY.format(instance))
                     .remove(PREF_CONNECTOR_AUTH.format(instance))
