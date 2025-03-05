@@ -343,7 +343,6 @@ object UnifiedPush {
         store.registrationSet.removeInstance(instance, keyManager).ifEmpty {
             store.removeDistributor()
         }
-        store.removeDistributor()
 
         if (Build.VERSION.SDK_INT >= 34) {
             val broadcastOptions = BroadcastOptions.makeBasic().setShareIdentityEnabled(true)
