@@ -3,19 +3,23 @@ package org.unifiedpush.android.connector.keys
 import android.content.SharedPreferences
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
+import android.util.Log
 import androidx.annotation.RequiresApi
 import org.unifiedpush.android.connector.PREF_CONNECTOR_AUTH
 import org.unifiedpush.android.connector.PREF_CONNECTOR_IV
 import org.unifiedpush.android.connector.PREF_CONNECTOR_PRIVKEY
 import org.unifiedpush.android.connector.PREF_CONNECTOR_PUBKEY
+import org.unifiedpush.android.connector.TAG
 import java.security.KeyFactory
 import java.security.KeyPair
 import java.security.KeyStore
 import java.security.KeyStore.SecretKeyEntry
 import java.security.interfaces.ECPublicKey
 import java.security.spec.PKCS8EncodedKeySpec
+import javax.crypto.AEADBadTagException
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
 @RequiresApi(23)
@@ -39,8 +43,16 @@ internal class WebPushKeysEntries23(private val instance: String, private val pr
                 ?.deserializePubKey()
                 ?: return null
 
-        val cipher = getDecryptionCipher(iv)
-        val privateBytes = cipher.doFinal(sealedPrivateKey)
+        val cipher = getAesGcmCipher(iv)
+        val privateBytes = try {
+            cipher.doFinal(sealedPrivateKey)
+        } catch (e: AEADBadTagException) {
+            // If a key for a 2nd instance has been generated with a connector version
+            // prior to 3.0.7, the secret key has been rotated, and would lead to
+            // this exception. In this case, the key must be re-generated.
+            Log.e(TAG, "AEADBadTagException caught for $instance, a new keypair must be generated.", e)
+            return null
+        }
         val privateKey =
             KeyFactory.getInstance("EC").generatePrivate(
                 PKCS8EncodedKeySpec(privateBytes),
@@ -51,7 +63,7 @@ internal class WebPushKeysEntries23(private val instance: String, private val pr
     override fun genWebPushKeys(): WebPushKeys {
         val keys = WebPushKeys.new()
 
-        val cipher = getEncryptionCipher()
+        val cipher = getNewAesGcmCipher()
         val sealedPrivateKey = cipher.doFinal(keys.keyPair.private.encoded)
 
         prefs.edit()
@@ -80,6 +92,7 @@ internal class WebPushKeysEntries23(private val instance: String, private val pr
     }
 
     override fun deleteWebPushKeys() {
+        Log.d(TAG, "Deleting webpush keys")
         prefs.edit()
             .remove(PREF_CONNECTOR_AUTH.format(instance))
             .remove(PREF_CONNECTOR_IV.format(instance))
@@ -88,36 +101,55 @@ internal class WebPushKeysEntries23(private val instance: String, private val pr
             .apply()
     }
 
-    private fun getEncryptionCipher(): Cipher {
-        val aesKey =
-            KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE_PROVIDER).apply {
-                init(
-                    KeyGenParameterSpec.Builder(ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
-                        .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-                        .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-                        .build(),
-                )
-            }.generateKey()
-
-        return Cipher.getInstance("AES/GCM/NoPadding").apply {
-            init(
-                Cipher.ENCRYPT_MODE,
-                aesKey,
-            )
-        }
-    }
-
-    private fun getDecryptionCipher(iIV: ByteArray): Cipher {
+    /**
+     * Get secret key in AndroidKeystore for alias [ALIAS], generate it if it doesn't exist
+     */
+    private fun getSecretKey(): SecretKey {
         val ks =
             KeyStore.getInstance(KEYSTORE_PROVIDER).apply {
                 load(null)
             }
-        val aesKey = ks.getEntry(ALIAS, null) as SecretKeyEntry
+        if (ks.containsAlias(ALIAS)) {
+            return (ks.getEntry(ALIAS, null) as SecretKeyEntry).secretKey
+        }
+        return KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE_PROVIDER).apply {
+            init(
+                KeyGenParameterSpec.Builder(ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+                    .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                    .build(),
+            )
+        }.generateKey()
+    }
+
+    /**
+     * Generate new AES GCM key
+     */
+    private fun getNewAesGcmCipher(): Cipher {
+        val secretKey = getSecretKey()
+        return Cipher.getInstance("AES/GCM/NoPadding").apply {
+            init(
+                Cipher.ENCRYPT_MODE,
+                secretKey,
+            )
+        }
+    }
+
+    /**
+     * Get AES GCM Key for [iIV]
+     */
+    private fun getAesGcmCipher(iIV: ByteArray): Cipher {
+        val ks =
+            KeyStore.getInstance(KEYSTORE_PROVIDER).apply {
+                load(null)
+            }
+        ks.containsAlias(ALIAS)
+        val secretKey = getSecretKey()
 
         return Cipher.getInstance("AES/GCM/NoPadding").apply {
             init(
                 Cipher.DECRYPT_MODE,
-                aesKey.secretKey,
+                secretKey,
                 GCMParameterSpec(128, iIV),
             )
         }
