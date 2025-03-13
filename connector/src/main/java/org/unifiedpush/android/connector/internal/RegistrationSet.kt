@@ -66,10 +66,6 @@ internal class RegistrationSet(private val preferences: SharedPreferences) {
                 .remove(PREF_CONNECTOR_TOKEN.format(instance))
                 .remove(PREF_CONNECTOR_VAPID.format(instance))
                 .remove(PREF_CONNECTOR_MESSAGE.format(instance))
-                .remove(PREF_CONNECTOR_IV.format(instance))
-                .remove(PREF_CONNECTOR_PUBKEY.format(instance))
-                .remove(PREF_CONNECTOR_PRIVKEY.format(instance))
-                .remove(PREF_CONNECTOR_AUTH.format(instance))
                 .apply()
             keyManager.delete(instance)
             return instances
@@ -83,10 +79,6 @@ internal class RegistrationSet(private val preferences: SharedPreferences) {
                     .remove(PREF_CONNECTOR_TOKEN.format(instance))
                     .remove(PREF_CONNECTOR_VAPID.format(instance))
                     .remove(PREF_CONNECTOR_MESSAGE.format(instance))
-                    .remove(PREF_CONNECTOR_IV.format(instance))
-                    .remove(PREF_CONNECTOR_PUBKEY.format(instance))
-                    .remove(PREF_CONNECTOR_PRIVKEY.format(instance))
-                    .remove(PREF_CONNECTOR_AUTH.format(instance))
                     .apply()
                 keyManager.delete(instance)
             }
