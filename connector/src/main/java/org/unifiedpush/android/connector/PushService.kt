@@ -50,14 +50,10 @@ abstract class PushService: Service() {
 
     /**
      * @hide
-     * Return [binder] onBind
+     * Return [PushBinder] onBind
      */
     override fun onBind(intent: Intent?): IBinder? {
-        return synchronized(lock) {
-            binder ?: PushBinder().also {
-                binder = it
-            }
-        }
+        return PushBinder()
     }
 
     /**
@@ -82,7 +78,5 @@ abstract class PushService: Service() {
 
     internal companion object {
         const val ACTION_PUSH_EVENT = "org.unifiedpush.android.connector.PUSH_EVENT"
-        private var binder: PushBinder? = null
-        private val lock = Object()
     }
 }
