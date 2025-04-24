@@ -85,10 +85,10 @@ internal class WebPushKeysEntries23(private val instance: String, private val pr
             prefs.contains(PREF_CONNECTOR_PUBKEY.format(instance)) &&
             prefs.contains(PREF_CONNECTOR_PRIVKEY.format(instance)) &&
             ks.containsAlias(ALIAS) &&
-            ks.entryInstanceOf(
-                ALIAS,
-                SecretKeyEntry::class.java,
-            )
+            // ks.entryInstanceOf(ALIAS, SecretKeyEntry::class.java)
+            // logs an exception for some SDK, like SDK30
+            // So we try to get the entry directly
+            ks.getEntry(ALIAS, null) as SecretKeyEntry? != null
     }
 
     override fun deleteWebPushKeys() {
