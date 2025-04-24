@@ -398,7 +398,7 @@ object UnifiedPush {
                 )
             } else {
                 context.packageManager.queryBroadcastReceivers(
-                    Intent(ACTION_REGISTER),
+                    intent,
                     PackageManager.GET_RESOLVED_FILTER,
                 )
             }
