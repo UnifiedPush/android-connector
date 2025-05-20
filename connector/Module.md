@@ -13,9 +13,52 @@ Add the dependency to the _module_ build.gradle. Replace {VERSION} with the [lat
 ```groovy
 dependencies {
     // ...
-    implementation 'org.unifiedpush.android:connector:{VERSION}'
+    implementation('org.unifiedpush.android:connector:{VERSION}')
 }
 ```
+
+<br>
+
+> The library depends on `tink` which may be used by another library you depend on. In this case, it is possible the build **failed because of duplicate classes**.
+>
+> The conflict must be resolved in **the module gradle file**, after the `plugins` and `android` blocks:
+> <details><summary>Gradle Kotlin DSL</summary>
+>
+> _app/build.gradle.kts_:
+>
+> ```kotlin
+> configurations.all {
+>     val tink = "com.google.crypto.tink:tink:1.16.0"
+>     // You can also use the library declaration catalog
+>     // val tink = libs.google.tink
+>     resolutionStrategy {
+>         force(tink)
+>         dependencySubstitution {
+>             substitute(module("com.google.crypto.tink:tink-android")).using(module(tink))
+>         }
+>     }
+> }
+> ```
+>
+> </details>
+>
+> <details><summary>Gradle Groovy DSL</summary>
+>
+> _app/build.gradle_:
+>
+> ```groovy
+> configurations.all {
+>     def tink = "com.google.crypto.tink:tink:1.16.0"
+>     resolutionStrategy {
+>         force(tink)
+>         dependencySubstitution {
+>            substitute module('com.google.crypto.tink:tink-android') using module(tink)
+>         }
+>     }
+> }
+> ```
+>
+> </details>
 
 ## Expose a Service to handle incoming events
 
