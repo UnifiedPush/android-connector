@@ -32,6 +32,8 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
+ * @hide
+ *
  * A {@link HybridEncrypt} implementation for the hybrid encryption used in <a
  * href="https://tools.ietf.org/html/rfc8291">RFC 8291 - Web Push Message Encryption</a>.
  *
