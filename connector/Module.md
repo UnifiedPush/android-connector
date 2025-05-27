@@ -28,13 +28,13 @@ dependencies {
 >
 > ```kotlin
 > configurations.all {
->     val tink = "com.google.crypto.tink:tink:1.16.0"
+>     val tink = "com.google.crypto.tink:tink-android:1.17.0"
 >     // You can also use the library declaration catalog
 >     // val tink = libs.google.tink
 >     resolutionStrategy {
 >         force(tink)
 >         dependencySubstitution {
->             substitute(module("com.google.crypto.tink:tink-android")).using(module(tink))
+>             substitute(module("com.google.crypto.tink:tink")).using(module(tink))
 >         }
 >     }
 > }
@@ -48,11 +48,11 @@ dependencies {
 >
 > ```groovy
 > configurations.all {
->     def tink = "com.google.crypto.tink:tink:1.16.0"
+>     def tink = "com.google.crypto.tink:tink-android:1.17.0"
 >     resolutionStrategy {
 >         force(tink)
 >         dependencySubstitution {
->            substitute module('com.google.crypto.tink:tink-android') using module(tink)
+>            substitute module('com.google.crypto.tink:tink') using module(tink)
 >         }
 >     }
 > }
