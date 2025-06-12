@@ -231,7 +231,7 @@ object UnifiedPush {
             store.registrationSet.newOrUpdate(
                 instance,
                 messageForDistributor,
-                vapid,
+                vapid?.replace("=", ""),
                 keyManager,
             ),
         )
