@@ -71,7 +71,7 @@ internal object InternalPushServiceConnection {
         }.also { intent ->
             context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
         }
-        Timer().schedule(1_000L) {
+        Timer().schedule(5_000L) {
             Log.d(TAG, "Unbinding")
             context.unbindService(connection)
         }
