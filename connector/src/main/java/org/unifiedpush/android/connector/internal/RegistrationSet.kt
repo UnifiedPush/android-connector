@@ -1,11 +1,7 @@
 package org.unifiedpush.android.connector.internal
 
 import android.content.SharedPreferences
-import org.unifiedpush.android.connector.PREF_CONNECTOR_AUTH
-import org.unifiedpush.android.connector.PREF_CONNECTOR_IV
 import org.unifiedpush.android.connector.PREF_CONNECTOR_MESSAGE
-import org.unifiedpush.android.connector.PREF_CONNECTOR_PRIVKEY
-import org.unifiedpush.android.connector.PREF_CONNECTOR_PUBKEY
 import org.unifiedpush.android.connector.PREF_CONNECTOR_TOKEN
 import org.unifiedpush.android.connector.PREF_CONNECTOR_VAPID
 import org.unifiedpush.android.connector.PREF_MASTER_INSTANCES
@@ -58,8 +54,7 @@ internal class RegistrationSet(private val preferences: SharedPreferences) {
     ): Set<String> {
         synchronized(registrationLock) {
             val instances =
-                preferences.getStringSet(PREF_MASTER_INSTANCES, null)?.toMutableSet()
-                    ?: emptySet<String>().toMutableSet()
+                preferences.getStringSet(PREF_MASTER_INSTANCES, null).orEmpty().toMutableSet()
             instances.remove(instance)
             preferences.edit()
                 .putStringSet(PREF_MASTER_INSTANCES, instances)

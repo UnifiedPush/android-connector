@@ -14,8 +14,8 @@ import java.util.UUID
 internal class Registration(
     val instance: String,
     val token: String,
-    var messageForDistributor: String?,
-    var vapid: String?,
+    val messageForDistributor: String?,
+    val vapid: String?,
 ) {
     companion object {
         /** Restore or save new [Registration] from the shared pref */
@@ -27,8 +27,8 @@ internal class Registration(
             keyManager: KeyManager,
         ): Registration {
             val instances =
-                preferences.getStringSet(PREF_MASTER_INSTANCES, null)?.toMutableSet()
-                    ?: emptySet<String>().toMutableSet()
+                preferences.getStringSet(PREF_MASTER_INSTANCES, null)
+                    .orEmpty().toMutableSet()
             var token = preferences.getString(PREF_CONNECTOR_TOKEN.format(instance), null)
             if (!instances.contains(instance)) {
                 token = null
