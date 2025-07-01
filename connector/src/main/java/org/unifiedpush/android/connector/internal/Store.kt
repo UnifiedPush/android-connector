@@ -7,7 +7,7 @@ import org.unifiedpush.android.connector.PREF_MASTER_DISTRIBUTOR
 import org.unifiedpush.android.connector.PREF_MASTER_DISTRIBUTOR_ACK
 
 internal class Store(context: Context) {
-    var registrationSet: RegistrationSet
+    val registrationSet: RegistrationSet
 
     init {
         preferences = context.getSharedPreferences(PREF_MASTER, Context.MODE_PRIVATE)
